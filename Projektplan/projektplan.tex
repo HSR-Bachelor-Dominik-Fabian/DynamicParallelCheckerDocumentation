@@ -5,6 +5,11 @@
 \usepackage{amssymb}
 \usepackage{german}
 \usepackage{fancyhdr}
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage{color}
+\usepackage[usenames,dvipsnames]{xcolor}
+\geometry{verbose,a4paper,tmargin=35mm,bmargin=35mm,lmargin=25mm,rmargin=25mm}
 \author{Dominik Heeb, Fabian Keller}
 \title{Projektplan Semesterarbeit}
 \pagestyle{fancy}
@@ -32,21 +37,36 @@
 \tableofcontents 
 \newpage
 
-\
 \section{Management Abläufe}
 \begin{flushleft}
 	Dieses Semesterarbeit wird im Rahmen des Bachelor Studiums an der HSR durchgeführt welches bei erfolgreichem Abschluss mit 8 ECTS Punkten gewertet wird. Ein ECTS Punkt entspricht einem ungefähren Zeitaufwand von 25 bis 30 Stunden. Somit wird von jedem Teammitglied ein Zeitaufwand von ca. 200 bis 250 Stunden erwartet.
 \end{flushleft}
 
 \subsection{Zeitliche Planung}
-\begin{flushleft}
-	
-\end{flushleft}
+	\begin{flushleft}
+		
+	\end{flushleft}
+	\includegraphics[width=16cm,height=7.5cm,trim=10mm 40mm 0mm 20mm, clip]{pictures/Meilensteinplan.pdf}
 
 \subsection{Meilensteine}
-\begin{enumerate}
-	\item Meilenstein Projektplanung
-	\item Meilenstein Algorithmus evaluiert
-\end{enumerate}
+\begin{flushleft}
+	Die einzelnen Meilensteine, die bereits in der zeitlichen Planung ersichtlich sind, beinhalten folgende Ziele:
+\end{flushleft}
+\begin{tabular}{cl}
+	\textcolor{Orange}{\textbf{M1:}} & Fertigstellung der Projektplanung\\[0.2cm]
+	\textcolor{Orange}{\textbf{M2:}} & Auseinandersetzung mit der Thematik, Entscheid welcher Arlgorithmus für Prototyp\\[0.2cm]
+	\textcolor{NavyBlue}{\textbf{M3:}} & Race Conditions werden mit Hilfe des Prototyp erkannt\\[0.2cm]
+	\textcolor{NavyBlue}{\textbf{M4:}} & Prototyp ist fertig implementiert und integriert.\\[0.2cm]
+	\textcolor{Dandelion}{\textbf{M5:}} & Abschluss des Projekts, Abgabe der technischen Dokumentation, Poster und Kurzfassung\\
+\end{tabular}
+\subsection{Besprechungen}
+\newpage
 \section{Vorgehen}
+\subsection{Projektmanagement}
+\subsection{Entwicklung}
+\subsubsection{Vorgehen}
+\subsubsection{Unit Testing}
+\subsubsection{Code Reviews}
+\subsubsection{Code Analyse}
+\subsubsection{Code Style Guidelines}
 \end{document}
