@@ -1,0 +1,1 @@
+for /r %v in (*.tex) do cd %~pv & pdflatex %v
