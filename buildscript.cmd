@@ -1,1 +1,1 @@
-for /r %%v in (*.tex) do cd %%~pv & pdflatex %%v
+for /r %%v in (*.tex) do cd %%~pv & pdflatex %%~nxv
