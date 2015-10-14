@@ -9,6 +9,7 @@
 \usepackage{geometry}
 \usepackage{listings}
 \usepackage{hyperref}
+\usepackage[onehalfspacing]{setspace}
 \usepackage{color}
 \usepackage[usenames,dvipsnames]{xcolor}
 \usepackage{DejaVuSans}
@@ -72,7 +73,7 @@ basicstyle=\ttfamily\normalsize,}
 \subsection{Vector Clock}
 \begin{flushleft}
 Die Vektor Clock ist ein Vorgehen um einzelnen Messages oder Events einen eindeutigen Zeitstempel zuzuweisen. Somit eine logische Uhr, die es erlaubt in einem Verteilten System (bei uns mehreren Threads) die Ereignisse aufgrund des Zeitstempels einer Kausalordnung zuzuweisen und insbesondere die Nebenläufigkeit von Ereignissen zu ermitteln.
-\\[0.5cm]Link:\href{https://de.wikipedia.org/wiki/Vektoruhr}{Wikipedia - Vector clock}
+\\[0.5cm]Link:\href{https://de.wikipedia.org/wiki/Vektoruhr}{Wikipedia - Vektor clock}
 \end{flushleft}
 \subsection{Happened-Before Beziehung}
 \begin{flushleft}
@@ -83,18 +84,30 @@ Eigenschaften der Happened-Before Beziehung:
 \item Wenn ein Prozess eine Nachricht zu einem anderen Prozess senden, dann a -> b wenn a der Sender und b der Empfänger ist.
 \item Für drei Ereignisse a, b, c, wenn a -> b und b -> c, dann a -> c (Transitivität)
 \end{itemize}
+In unserem speziellen Fall arbeiten wir mit dem Vergleich der einzelnen Elementen des Vektors. Dabei gibt es zwei verschiedene Beziehungen die zwei Ereignisse miteinander haben können:\\
+\textit{\textbf{Happened-Before}\\[0.2cm]}
+\begin{tabular}{ c c }
+  (x1, x2, x3) -> (y1, y2, y3) & (y1, y2, y3) -> (x1, x2, x3) \\
+  y1 >= x1 & x1 >= y1 \\
+  y2 >= x2 & x2 >= y2 \\
+  y3 >= x3 & x3 >= y3 \\[0.2cm]
+\end{tabular}
+\\Jedes Elemente eines Vektors ist grösser oder gleich dem Elemente des selben Threads im zweiten Vektor. Dadurch hat eine Synchronisation stattgefunden und es kann eine Aussage zu der Happened-Before Beziehung gemacht werden.\\
+\textit{\textbf{Concurrent}\\}
+Wenn keine Aussage über die Happened-Before Beziehung gemacht werden kann, sprich der erste Zustand nicht gilt, sind die Ereignisse Concurrent. D.h. sie können gleichzeitig abgelaufen sein und daher für den Dynamic Parallel Checker interessant.\\
 \end{flushleft}
 \newpage
-\section{Vector Clock Algorithmus}
+\section{Vektor Clock Algorithmus}
 \subsection{Beispiel}
 
 \begin{flushleft}
-Der Vector Clock Algorithmus wird in diesem Kapitel mit Hilfe von folgendem C\# Code genauer erläutert.\\
+Der Vektor Clock Algorithmus wird in diesem Kapitel mit Hilfe von folgendem C\# Code genauer erläutert.\\
+\begin{singlespace}
 \begin{lstlisting}
-object a = 1;
+object a = 1;				// main thread1 (T1)
 object b = 1;
 b = 2;
-Task.Factory.StartNew(() =>
+Task.Factory.StartNew(() =>		// start thread2 (T2)
 {
 	lock(b) {
 		b = 3;
@@ -104,7 +117,7 @@ Task.Factory.StartNew(() =>
 		Console.WriteLine(a);
 	}
 });
-Task.Factory.StartNew(() =>
+Task.Factory.StartNew(() =>		// start thread3 (T3)
 {
 	lock(a) {
 		a = 2;
@@ -122,19 +135,44 @@ lock(b) {
 }
 Console.WriteLine(a);
 \end{lstlisting}
+\end{singlespace}
 \end{flushleft}
 
 \begin{flushleft}
-Diese Beispielfunktion könnte im Ablauf nun wie folgt aussehen:\\[0.5cm]
-	\includegraphics[width=14cm,height=5cm,trim=20mm 90mm 110mm 20mm, clip]{pictures/VectorCheckingAlgorithm.pdf}
+Diese Beispielfunktion aus Sicht der Dynamic Parallel Checker sieht wie folgt aus: (Nur Lese-, Schreib-, Lock- und Unlockzugriffe auf Ressourcen)\\[0.5cm]
+	\includegraphics[width=14cm,height=5cm,trim=20mm 90mm 110mm 20mm, clip]{pictures/VectorCheckingAlgorithm.pdf}\\
 \end{flushleft}
-
-\subsection{Vector Clock pro Thread}
+\subsection{Vektor Clock pro Thread}
 \begin{flushleft}
-Die Vektor Clock ist eigentlich für verteilte Software Systeme 
+Die Vektor Clock eignet sich optimal für den Dynamic Parallel Checker. Jeder Thread erhält seine eigene Vektor Clock um die Ereignisse in eine Kausalordnung zu bringen. Bei einem lock und anschliessendem unlock auf die gleiche Ressource wird die Vektor Clock der beiden Threads synchronisiert.\\
+Die Vektor Clock wird vorallem dann benötigt, wenn alle Threads auf Race Conditions untersucht werden. Dabei kann mit Hilfe der Vektor Clock genau gesagt werden ob zwei Ereignisse (Read oder Write) in der Happened-Before Beziehung stehen oder ob sie Concurrent sind. Nur wenn sie Concurrent sind kann eine Race Condition aufgetreten sein.
+\end{flushleft}
+\subsection{Lock-History}
+\begin{flushleft}
+Während der kompletten Überprüfung wird eine Lock-History geführt, in der ersichtlich ist welcher Thread auf welche Ressource zu welcher Zeit (Vektor Clock) einen Lock durchgeführt hat. Diese History wird benötigt um eine Synchronisation zwischen zwei Threads vorzunehmen. Eine Lock-History könnte wie folgt aussehen:
+\end{flushleft}
+\begin{center}
+\textbf{\textit{Lock-History:}}\\[0.5cm]
+\begin{tabular}{ c c c }
+  Vektor & Ressource & ThreadNr \\\hline
+  (0,1,0) & b & 2 \\
+  (1,0,0) & a & 1 \\\hline
+\end{tabular}
+\end{center}
+\subsubsection{Synchronisation der Vektor Clock}
+\begin{flushleft}
+Wenn z.B. in unserem Beispielprogramm Thread1(T1) vor Thread3(T3) in den lock(a) Bereich kommt, schreibt er beim Verlassen des gesicherten Bereichs einen Eintrag in die Lock-History. Wenn nun T3 den lock von a beziehen möchte schaut er zuerst in die Lock-History und synchronisiert seine Vektor Clock (a1,a2,a3) mit der Vektor Clock des Eintrags in der Tabelle (b1,b2,b3).\\
+Die neue Vektor Clock von T3 lässt sich nun wie folgt bilden: 
+\begin{center}(b1, max(a2, b2), a3 + 1)\end{center}
+\textit{Erklärung:}
+\begin{itemize}
+\item Von dem Thread, dessen Eintrag in der Lock-History zu einer Synchronisation führte, kann direkt der Wert übernommen werden.
+\item Der synchronisierende Thread kann den eigenen Wert übernehmen und die Zahl 1 addieren.
+\item Von jedem Thread der nicht in die Synchronisation involviert ist kann max(a, b) genommen werden.
+\end{itemize}
+Nach der Synchronisation ist eine Barriere aufgebaut. Kein Ereignis von T3 kann nach der Synchronisation mit einem Ereignis von T1 vor der Synchronisation in Konflikt stehen.
 \end{flushleft}
 \subsection{Funktion}
-
 \begin{flushleft}
 
 \end{flushleft}
