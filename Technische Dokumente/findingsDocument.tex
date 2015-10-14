@@ -16,6 +16,8 @@
 \definecolor{gray}{rgb}{0.5,0.5,0.5}
 \definecolor{mauve}{rgb}{0.58,0,0.82}
 \definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+\definecolor{stackreferencegreen}{rgb}{0,0.69,0.313}
+\definecolor{heapreferencered}{rgb}{0.753,0,0}
 
 \lstset{
   language={[Sharp]C},
@@ -113,4 +115,33 @@ method.Body.OptimizeMacros(); // Convert the normal branches back to short branc
 \end{lstlisting}
 Dieser Befehl muss pro Methode welche instrumentiert wird aufgerufen werden.
 \end{flushleft}
+\newpage
+\section{Findings zur CLR}
+\subsection{Refernce-Type/Value-Type}
+\subsubsection{Ausgangslage}
+\begin{flushleft}
+In Programmiersprachen werden Datentypen in zwei Kategorien eingeteilt: Reference- oder Value- Types. Als Value-Types werden die Basistypen wie (int, float, char, short, usw.) gehandelt. Zusätzlich zu den Basisdatentypen werden auch Structs (in .Net) als Value-Type gehandelt. String jedoch ist ein Reference-Type.\\
+Der Unterschied dieser Kategorien bezieht sich auf das Handling im Memory. Value-Types werden als effektive Werte auf dem Stack gespeichert.\\
+Reference-Types werden als Referenz auf dem Stack gespeichert. Die Werte befinden sich auf dem Heap.\\
+Dieser Unterschied muss während der Instrumentation beachtet werden. Denn bei Reference-Types gibt es zwei Referenzen: 
+\begin{enumerate}
+\item Die {\color{stackreferencegreen} Referenz} auf das Feld, welches den Reference-Type beinhaltet.
+\item Die {\color{heapreferencered}Referenz} auf den Reference-Type im Heap.
+\end{enumerate}
+\includegraphics[width=14cm, clip]{pictures/ValueReferenceType.png}
+\end{flushleft}
+\subsubsection{Erkenntnis}
+\begin{flushleft}
+Bei der Realisation des Dynamic Parallel Checkers ist dieser Fakt essentiell. Bei der Detektion einer Race Condition, kann diese bei der Referenz auf den Stack, sowie auf das referenzierte Objekt im Heap entstehen.
+Daher müssen für das monitoren der Zugriffe immer beide Referenzen beachtet werden.
+Im IL Code können die zwei Referenzen über zwei Befehle ausgelesen werden.
+\begin{lstlisting} 
+  /* Beispiel mit Static Fields. Verhaltet sich mit anderen Field-Typen gleich */
+IL_0059:  ldsflda    class TestProgram.NewObject TestProgram.Program::_obj
+  /* Referenz auf das Feld im Stack liegt Top-Of-Stack */
+IL_005e:  ldsfld     class TestProgram.NewObject TestProgram.Program::_obj
+  /* Referenz auf das Feld im Heap liegt Top-Of-Stack oder Wert eines Value-Types */
+\end{lstlisting}
+\end{flushleft}
+\newpage
 \end{document}
