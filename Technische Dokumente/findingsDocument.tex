@@ -1,0 +1,60 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{german}
+\usepackage{fancyhdr}
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage{color}
+\usepackage[usenames,dvipsnames]{xcolor}
+\usepackage{DejaVuSans}
+\usepackage[T1]{fontenc}
+\renewcommand*{\familydefault}{\sfdefault}
+\geometry{verbose,a4paper,tmargin=35mm,bmargin=35mm,lmargin=25mm,rmargin=25mm}
+\author{Dominik Heeb \& Fabian Keller}
+\title{Findings}
+\pagestyle{fancy}
+\fancyhead{}
+\fancyhead[L]{Findings - Dynamic Parallel Checker}
+\fancyhead[R]{Domink Heeb \& Fabian Keller}
+\fancyfoot{}
+\fancyfoot[R]{Seite \thepage}
+\begin{document}
+\begin{titlepage}
+	\begin{Huge}
+		\begin{center}
+				Findings \\Dynamic Parallel Checker\\[2.0cm]
+		\end{center}
+	\end{Huge}
+	
+	\begin{center}
+		\begin{Large}
+				by Dominik Heeb \& Fabian Keller\\[1.0cm]
+		\end{Large}
+	\end{center}
+\end{titlepage}
+
+\newpage
+\tableofcontents 
+\newpage
+
+\section{Einleitung}
+\begin{flushleft}
+Dieses Dokument beinhaltet Findings(Erkenntnisse) welche während der Arbeit am 'Dynamic Parallel Checker' aufgefunden wurden.
+\end{flushleft}
+\section{Findings zu Mono.Cecil}
+\subsection{Lokale Variablen}
+\subsubsection{Ausgangslage}
+\begin{flushleft}
+Um den Stack zur Laufzeit verwerten zu können, aber trotzdem die Gültigkeit nach der Verarbeitung sicherzustellen, muss der Stack zum Teil abgebaut und wieder aufgebaut werden. Um die Werte die oben auf dem Stack liegen, nicht zu verlieren, werden lokale Variablen verwendet.
+Das Problem bei der Arbeit mit lokalen Variablen ist, dass diese von der Instrumentation, sowie auch vom Hauptprogram verwendet werden können. Wichtig ist es daher sicherzustellen, dass die Variablen nicht die selben sind, wie die vom Hauptprogram verwendeten.
+Mono.Cecil erlaubt es einem während der Instrumentation neue Variablen einzufügen, dabei muss aber das Verhalten von Cecil beachtet werden.
+\end{flushleft}
+\subsubsection{Erkenntnis}
+\begin{flushleft}
+Um die Grösse der Instrumentation klein zu halten, wurde entschieden nicht für jeden Instrumentationsvorgang neue Variablen zu definieren, sondern diese wiederzuverwerten. Dadurch soll der Overhead der Instrumentation reduziert werden.
+Bei der Arbeit mit Cecil wurde dann eine globale Definition eingesetzt, welche im Code verwendet wurde.
+\end{flushleft}
+\end{document}
