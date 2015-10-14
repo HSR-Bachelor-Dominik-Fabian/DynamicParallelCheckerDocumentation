@@ -11,6 +11,35 @@
 \usepackage[usenames,dvipsnames]{xcolor}
 \usepackage{DejaVuSans}
 \usepackage[T1]{fontenc}
+\usepackage{listings}
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstset{
+  language={[Sharp]C},
+  backgroundcolor=\color{backcolour},
+  framexleftmargin=3mm,
+  framexrightmargin=3mm,
+  framextopmargin=3mm,
+  framexbottommargin=3mm,
+  alsolanguage=CIL,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\small\ttfamily},
+  numbers=none,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=3
+}
+
 \renewcommand*{\familydefault}{\sfdefault}
 \geometry{verbose,a4paper,tmargin=35mm,bmargin=35mm,lmargin=25mm,rmargin=25mm}
 \author{Dominik Heeb \& Fabian Keller}
@@ -56,5 +85,32 @@ Mono.Cecil erlaubt es einem während der Instrumentation neue Variablen einzufü
 \begin{flushleft}
 Um die Grösse der Instrumentation klein zu halten, wurde entschieden nicht für jeden Instrumentationsvorgang neue Variablen zu definieren, sondern diese wiederzuverwerten. Dadurch soll der Overhead der Instrumentation reduziert werden.
 Bei der Arbeit mit Cecil wurde dann eine globale Definition eingesetzt, welche im Code verwendet wurde.
+Dabei zeigte sich jedoch dass die Klasse VariableDefinition per Seiteneffekt bearbeitet wird. Durch das hinzufügen in einer Methode wird der Klasse ein Name fest eingetragen. Durch weitere Methoden wird dieser fortlaufen überschrieben und erst beim Speichern des Assembly geschrieben. Dadurch kann es zu grossen Fehlern kommen, da die Variablennamen nicht mehr stimmen.
+Daher muss die Definition der Variable pro Methode neu erstellt werden (siehe Bild unten)
+\includegraphics[width=14cm, clip]{pictures/VariableDefinition.png}
+\end{flushleft} \newpage
+\subsection{Short Branches}
+\subsubsection{Ausgangslage}
+\begin{flushleft}
+Bei der Instrumentation von Code ist es wichtig zu beachten das für einige Befehle wie (try/catch/finally usw.) Sprungmarken(Branches) verwendet. Diese Verweisen auf eine bestimmte Zeile innerhalb des IL Codes.
+\begin{lstlisting} 
+br IL_0003 /*Branch zu Zeile IL_0003*/
+call *****
+IL_0003: ret
+\end{lstlisting}
+Durch die Instrumentation werden diese Zeilen zum Teil auseinandergeschoben und daher die Werte nicht mehr korrekt. Mono.Cecil hilft einem dabei und passt die Werte neu an.
+Jedoch muss die Grösse des Codes beachtet werden.
+\end{flushleft}
+\subsubsection{Erkenntnis}
+\begin{flushleft}
+Wenn der IL Code nicht gross ist, werden für die Branch Nummern short Werte verwendet.
+Daher muss dies während der Instrumentation beachtet werden. Denn short wird relativ schnell überschritten, dies wird standardmässig von Cecil nicht weiter beachtet. Daher kommt es in so einem Fall zu grösseren Problemen, da die Referenzen nicht mehr stimmen.
+Mono.Cecil stellt dafür zwei Methoden zur Verfügung. Diese müssen vor und nach der Instrumentation verwendet werden, um dieses Problem zu beheben.
+\begin{lstlisting} 
+method.Body.SimplifyMacros(); // convert every br.s (short branch) to a normal branch
+/*.....Code Instrumentation.....*/
+method.Body.OptimizeMacros(); // Convert the normal branches back to short branches if possible
+\end{lstlisting}
+Dieser Befehl muss pro Methode welche instrumentiert wird aufgerufen werden.
 \end{flushleft}
 \end{document}
