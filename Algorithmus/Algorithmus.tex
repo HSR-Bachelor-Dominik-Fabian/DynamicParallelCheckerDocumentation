@@ -19,7 +19,7 @@
 \title{Projektplan Semesterarbeit}
 \pagestyle{fancy}
 \fancyhead{}
-\fancyhead[L]{Alrogithmus Vector Clock - DPC}
+\fancyhead[L]{DPC Alrogithmus Vector Clock}
 \fancyhead[R]{Domink Heeb, Fabian Keller}
 \fancyfoot{}
 \fancyfoot[R]{Seite \thepage}
@@ -44,7 +44,7 @@ commentstyle=\color{greencomments},
 morekeywords={partial, var, value, get, set},
 keywordstyle=\color{bluekeywords},
 stringstyle=\color{redstrings},
-basicstyle=\ttfamily\small,}
+basicstyle=\ttfamily\normalsize,}
 
 \begin{document}
 \begin{titlepage}
@@ -69,30 +69,6 @@ basicstyle=\ttfamily\small,}
 \newpage
 
 \section{Allgemein}
-
-\subsection{Beispiel}
-\begin{flushleft}
-Der Vector Clock Algorithmus wird in diesem Kapitel mit Hilfe von folgendem C\# Code genauer erläutert.\\
-\begin{lstlisting}
-object a = 2;
-object b = 3;
-a += 3;
-Task.Factory.StartNew(() =>
-{
-   lock (a)
-   {
-      a += 4; 
-   }
-   a += 1;
-});
-lock (a)
-{
-   a += 5; 
-}
-a += 3;
-\end{lstlisting}
-\end{flushleft}
-
 \subsection{Vector Clock}
 \begin{flushleft}
 Die Vektor Clock ist ein Vorgehen um einzelnen Messages oder Events einen eindeutigen Zeitstempel zuzuweisen. Somit eine logische Uhr, die es erlaubt in einem Verteilten System (bei uns mehreren Threads) die Ereignisse aufgrund des Zeitstempels einer Kausalordnung zuzuweisen und insbesondere die Nebenläufigkeit von Ereignissen zu ermitteln.
@@ -110,11 +86,56 @@ Eigenschaften der Happened-Before Beziehung:
 \end{flushleft}
 \newpage
 \section{Vector Clock Algorithmus}
-\subsection{Funktion}
-Von jeder
 \subsection{Beispiel}
+
 \begin{flushleft}
-Die Beispielfunktion im Kapitel \"Allgemein - Beispiel\" könnte im Ablauf wie folgt aussehen:
-	\includegraphics[width=16cm,height=7.5cm,trim=10mm 40mm 0mm 30mm, clip]{pictures/Beispiel_Ablauf.pdf}
+Der Vector Clock Algorithmus wird in diesem Kapitel mit Hilfe von folgendem C\# Code genauer erläutert.\\
+\begin{lstlisting}
+object a = 1;
+object b = 1;
+b = 2;
+Task.Factory.StartNew(() =>
+{
+	lock(b) {
+		b = 3;
+	}
+	b = 4;
+	lock(a) {
+		Console.WriteLine(a);
+	}
+});
+Task.Factory.StartNew(() =>
+{
+	lock(a) {
+		a = 2;
+	}
+	b = 5;
+	lock(b) {
+		Console.WriteLine(b);
+	}
+})
+lock(a) {
+	a = 3;
+}
+lock(b) {
+	b = 6;
+}
+Console.WriteLine(a);
+\end{lstlisting}
+\end{flushleft}
+
+\begin{flushleft}
+Diese Beispielfunktion könnte im Ablauf nun wie folgt aussehen:\\[0.5cm]
+	\includegraphics[width=14cm,height=5cm,trim=20mm 90mm 110mm 20mm, clip]{pictures/VectorCheckingAlgorithm.pdf}
+\end{flushleft}
+
+\subsection{Vector Clock pro Thread}
+\begin{flushleft}
+Die Vektor Clock ist eigentlich für verteilte Software Systeme 
+\end{flushleft}
+\subsection{Funktion}
+
+\begin{flushleft}
+
 \end{flushleft}
 \end{document}
