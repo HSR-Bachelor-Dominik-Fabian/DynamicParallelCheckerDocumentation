@@ -41,7 +41,6 @@
   breakatwhitespace=true,
   tabsize=3
 }
-
 \renewcommand*{\familydefault}{\sfdefault}
 \geometry{verbose,a4paper,tmargin=35mm,bmargin=35mm,lmargin=25mm,rmargin=25mm}
 \author{Dominik Heeb \& Fabian Keller}
@@ -144,4 +143,18 @@ IL_005e:  ldsfld     class TestProgram.NewObject TestProgram.Program::_obj
 \end{lstlisting}
 \end{flushleft}
 \newpage
+\section{Findings Dynamic Parallel Checker}
+\subsection{Asynchrone vs. synchrone Architektur}
+\subsubsection{Ausgangslage}
+\begin{flushleft}
+Der Dynamic Parallel Checker kann mit einer Asynchronen, sowie einer synchronen Architektur konzeptionell realisiert werden. Beide Architekturen haben Vor- / sowie Nachteile. Daher müssen sie gegeneinander aufgewogen werden.\\
+Eine Asynchrone Architektur instrumentiert den IL Code so dass die Werte über einen Kommunikationskanal (z.B. Named Pipe) übertragen wird und vom Hauptprogram verarbeitet.
+Die synchrone Architektur instrumentiert den Code so, dass neben dem lesen der Werte auch der Check übernommen wird. Dabei ist das Programm blockierend.
+\includegraphics[width=16cm, clip]{pictures/AsnycSyncArchitecture.png}
+\end{flushleft}
+\subsubsection{Erkenntnis}
+\begin{flushleft}
+Bei aktuellen Programmierkonzepten werden blockierende Archtiekturen vermieden, um die Nutzungsperformance hochzuhalten. Jedoch muss im Beispiel des Dynamic Parallel Checker beachtet werden, um was für Datenmengen es sich handelt. Die Prüfung in der asynchronen Architektur kann ohne Blockierungsmechanismus nicht mit dem Programm mithalten. Dadurch wird bei grossen Softwareprojekten die Pipe immer weiter gefüllt, bis der Speicher nicht mehr ausreicht. Ein anderes Argument gegen die asynchrone Architektur ist der zeitliche Aspekt. Die Prüfung wird über einen längeren Zeitpunkt immer weiter Entfernt vom Zeitpunkt des Fehlers sein. So könnte es theoretisch vorkommen, dass eine Race Condition auftritt, der DPC es aber erst 5-10min später meldet, da er mit der Überprüfung so weit hinter her ist.\\
+{\huge \color{red} TODO:Vergleich async vs. Sync}
+\end{flushleft}
 \end{document}
