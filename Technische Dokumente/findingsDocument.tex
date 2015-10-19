@@ -13,6 +13,7 @@
 \usepackage[T1]{fontenc}
 \usepackage{listings}
 \definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{dkred}{rgb}{0.6,0,0}
 \definecolor{gray}{rgb}{0.5,0.5,0.5}
 \definecolor{mauve}{rgb}{0.58,0,0.82}
 \definecolor{backcolour}{rgb}{0.95,0.95,0.92}
@@ -116,7 +117,7 @@ Dieser Befehl muss pro Methode welche instrumentiert wird aufgerufen werden.
 \end{flushleft}
 \newpage
 \section{Findings zur CLR}
-\subsection{Refernce-Type/Value-Type}
+\subsection{Reference-Type/Value-Type}
 \subsubsection{Ausgangslage}
 \begin{flushleft}
 In Programmiersprachen werden Datentypen in zwei Kategorien eingeteilt: Reference- oder Value- Types. Als Value-Types werden die Basistypen wie (int, float, char, short, usw.) gehandelt. Zusätzlich zu den Basisdatentypen werden auch Structs (in .Net) als Value-Type gehandelt. String jedoch ist ein Reference-Type.\\
@@ -154,7 +155,18 @@ Die synchrone Architektur instrumentiert den Code so, dass neben dem lesen der W
 \end{flushleft}
 \subsubsection{Erkenntnis}
 \begin{flushleft}
-Bei aktuellen Programmierkonzepten werden blockierende Archtiekturen vermieden, um die Nutzungsperformance hochzuhalten. Jedoch muss im Beispiel des Dynamic Parallel Checker beachtet werden, um was für Datenmengen es sich handelt. Die Prüfung in der asynchronen Architektur kann ohne Blockierungsmechanismus nicht mit dem Programm mithalten. Dadurch wird bei grossen Softwareprojekten die Pipe immer weiter gefüllt, bis der Speicher nicht mehr ausreicht. Ein anderes Argument gegen die asynchrone Architektur ist der zeitliche Aspekt. Die Prüfung wird über einen längeren Zeitpunkt immer weiter Entfernt vom Zeitpunkt des Fehlers sein. So könnte es theoretisch vorkommen, dass eine Race Condition auftritt, der DPC es aber erst 5-10min später meldet, da er mit der Überprüfung so weit hinter her ist.\\
-{\huge \color{red} TODO:Vergleich async vs. Sync}
+Bei aktuellen Programmierkonzepten werden blockierende Archtiekturen vermieden, um die Nutzungsperformance hochzuhalten. Jedoch muss im Beispiel des Dynamic Parallel Checker beachtet werden, um was für Datenmengen es sich handelt. Die Prüfung in der asynchronen Architektur kann ohne Blockierungsmechanismus nicht mit dem Programm mithalten. Dadurch wird bei grossen Softwareprojekten die Pipe immer weiter gefüllt, bis der Speicher nicht mehr ausreicht. Ein anderes Argument gegen die asynchrone Architektur ist der zeitliche Aspekt. Die Prüfung wird über einen längeren Zeitpunkt immer weiter Entfernt vom Zeitpunkt des Fehlers sein. So könnte es theoretisch vorkommen, dass eine Race Condition auftritt, der DPC es aber erst 5-10min später meldet, da er mit der Überprüfung so weit hinter her ist. Dieses Problem hat die synchrone Überprüfung nicht, da sie blockiert, bis die Berechnung fertig ist. Wenn ein Fehler gefunden wird, kann dieser dadurch sofort gemeldet werden.
+\newpage
+\begin{tabular}{|p{8cm}|p{8cm}|}
+Asynchron & Synchron \\ 
+\hline 
+{\color{dkgreen} + Getestete Software mit wenig Performance einbussen}  & { \color{dkgreen}+ Keine Messaging Komponenten} \\
+{\color{dkred}- Program und Prüfung nach kurzer Zeit nicht mehr synchron} & { \color{dkgreen}+ Fehler werden angezeigt wenn sie auftreten}\\
+{\color{dkred}- Queue/Pipe wird überlastet} & { \color{dkred}- Programm blockiert während der Prüfung}\\
+{\color{dkred}- Rückschluss wann der Fehler aufgekommen ist, ist sehr schwer}&\\
+ 
+\hline 
+\end{tabular} 
 \end{flushleft}
+
 \end{document}
