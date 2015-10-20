@@ -97,6 +97,11 @@ In unserem speziellen Fall arbeiten wir mit dem Vergleich der einzelnen Elemente
 Wenn keine Aussage über die Happened-Before Beziehung gemacht werden kann, sprich der erste Zustand nicht gilt, sind die Ereignisse Concurrent. D.h. sie können gleichzeitig abgelaufen sein und daher für den Dynamic Parallel Checker interessant.\\
 \end{flushleft}
 \newpage
+\subsection{Race Condition}
+\begin{flushleft}
+TODO
+\end{flushleft}
+\newpage
 \section{Vektor Clock Algorithmus}
 \subsection{Beispiel}
 
@@ -173,23 +178,18 @@ Die neue Vektor Clock von T3 lässt sich nun wie folgt bilden:
 Nach der Synchronisation ist eine Barriere aufgebaut. Kein Ereignis von T3 kann nach der Synchronisation mit einem Ereignis von T1 vor der Synchronisation in Konflikt stehen.
 \end{flushleft}
 \subsection{Funktion}
+\subsubsection{Vector Clock Management Algorithmus}
 \begin{flushleft}
 Bei jedem Auftreten eines Ereignisses innerhalb des gesamten Systems wird das folgende Ablaufdiagramm durchlaufen:\\[0,5cm]
-	\includegraphics[width=16cm,height=11.5cm,trim=60mm 0mm 20mm 0mm, clip]{pictures/Ablaufdiagramm_Algorithmus.pdf}\\
+	\includegraphics[width=16cm,height=12.5cm,trim=70mm 0mm 20mm 0mm, clip]{pictures/Ablaufdiagramm_Algorithmus.pdf}\\
 
-\begin{enumerate}
-\item \flqq Ereignis == Lock\frqq: Ist dieses Ereignis ein Lock-Ereignis?
-	\begin{enumerate}
-	\item true 	=> Eintrag in Lock-History vorhanden?: Prüft ob in der Lock-History ein Eintrag zu dieser Ressource vorhanden ist.
-	\item false =>  Weiter
-	\end{enumerate}
-\item (Ereignis == Unlock) -> (Über)schreibe Eintrag in Lock-Tabelle, Eigener Wert in Vektor Clock inkrementieren.
-\item Ereignis in Program-History ablegen.
-\item In gesamter Program-History nach Ereignissen suchen, die Concurrent zueinander sind. Diese Ereignisse auf Race Conditions prüfen.
-	\begin{enumerate}
-	\item Race Condition: Fehlermeldung ausgeben.
-	\item Keine Race Condition: Weiter
-	\end{enumerate}
-\end{enumerate}
+Zu Beginn wird geprüft ob es sich bei dem Ereignis um ein Lock-Ereignis handelt. Ist dies der Fall muss geprüft werden ob zu der Ressource im Ereignis ein Eintrag in der Lock-History vorhanden ist. Wenn ein solcher Eintrag vorhanden ist muss die Vector Clock des jetzigen Threads mit dem Eintrag in der History synchronisiert werden.\\
+Als nächstes wird geprüft ob es sich um ein Unlock-Ereignis handelt. Wenn ja muss ein neuer Eintrag in die Lock-History gemacht werden. Dabei muss geprüft werden ob bereits einer vorhanden ist, dann muss dieser überschrieben werden. Zudem muss anschliessend der eigene Wert in der Vector Clock inkrementiert werden.\\
+Jedes Ereignis muss anschliessend in die Program-History geschrieben werden. Denn mit Hilfe dieser History wird im nächsten Schritt überprüft ob irgendwelche Race Conditions vorliegen.
 \end{flushleft}
+\newpage
+\subsubsection{Race Condition Check}
+Der Race Condition Check findet nach jedem Ereignis statt. Dies ist in Bezug auf Performance nicht das Optimalste, jedoch können wir dadurch sicherstellen, dass in einem grösseren Zeitraum sicher ein Check stattfindet.\\
+Im Schritt \flqq Ereignisse auf Race Conditions prüfen\frqq\ aus dem Vector Clock Management Algorithmus werden das neue Ereignis auf Race Conditions überprüft. Dabei zuerst mit Hilfe der Vector Clock überprüft welche Ereignisse der anderen Thread neben läufig zu dem jetzigen Ereignis sind. Diese Ereignisse müssen genauer betrachtet werden. Denn jedes Ereignis, das eine Happened-Before Beziehung mit dem jetzigen Ereignis hat, kann keine Race Condition sein weil eine Synchronisation zwischen den beiden Threads stattgefunden hat.\\
+Nun wird geprüft ob eines der neben läufigen Ereignissen auf die selbe Ressource zugegriffen hat. Es ist auch wichtig ob ein Lese- oder sogar ein Schreibzugriff stattgefunden hat. Zudem wird in jedem Ereignis hinterlegt ob der Zugriff in einem bestimmten Lock stattgefunden hat. Mit Hilfe dieser Informationen kann nun geprüft werden ob eine Race Condition stattgefunden hat.
 \end{document}
