@@ -1,0 +1,135 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{german}
+\usepackage{fancyhdr}
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage{listings}
+\usepackage{hyperref}
+\usepackage[onehalfspacing]{setspace}
+\usepackage{color}
+\usepackage[usenames,dvipsnames]{xcolor}
+\usepackage{DejaVuSans}
+\usepackage[T1]{fontenc}
+
+\renewcommand*{\familydefault}{\sfdefault}
+\geometry{verbose,a4paper,tmargin=35mm,bmargin=35mm,lmargin=25mm,rmargin=25mm}
+\author{Dominik Heeb, Fabian Keller}
+\title{Dynamic Paralle Checker}
+\pagestyle{fancy}
+\fancyhead{}
+\fancyhead[L]{Dynamic Paralle Checker}
+\fancyhead[R]{Domink Heeb, Fabian Keller}
+\fancyfoot{}
+\fancyfoot[R]{Seite \thepage}
+
+\definecolor{bluekeywords}{rgb}{0,0,1}
+\definecolor{greencomments}{rgb}{0,0.5,0}
+\definecolor{redstrings}{rgb}{0.64,0.08,0.08}
+\definecolor{xmlcomments}{rgb}{0.5,0.5,0.5}
+\definecolor{types}{rgb}{0.17,0.57,0.68}
+\lstset{language=[Sharp]C,
+captionpos=b,
+showspaces=false,
+showtabs=false,
+breaklines=true,
+showstringspaces=false,
+breakatwhitespace=true,
+escapeinside={(*@}{@*)},
+commentstyle=\color{greencomments},
+morekeywords={partial, var, value, get, set},
+keywordstyle=\color{bluekeywords},
+stringstyle=\color{redstrings},
+basicstyle=\ttfamily\normalsize,}
+
+\usepackage{amsmath}
+\usepackage[some]{background}
+\usepackage{lipsum}
+
+\definecolor{titlepagecolor}{cmyk}{1,.20,0,.25}
+
+\DeclareFixedFont{\bigsf}{T1}{phv}{b}{n}{1.5cm}
+
+\backgroundsetup{
+scale=1,
+angle=0,
+opacity=1,
+contents={\begin{tikzpicture}[remember picture,overlay]
+ \path [fill=titlepagecolor] (-0.5\paperwidth,5) rectangle (0.5\paperwidth,10);  
+\end{tikzpicture}}
+}
+\makeatletter                       
+\def\printauthor{%                  
+    {\LARGE Studenten:\\\vspace{10pt}
+    \large \@author \\\vspace{20pt}
+    \LARGE Dozent:\\\vspace{10pt}
+    \large Prof. Dr. Luc Bläser \\
+	\texttt{lblaeser@hsr.ch}}}            
+\makeatother
+\author{%
+    Fabian Keller \\
+    Semester 5 \\
+    \texttt{f3keller@hsr.ch}\vspace{15pt} \\
+    Dominik Heeb \\
+    Semester 5 \\
+    \texttt{d1heeb@hsr.ch}
+    }
+\begin{document}
+\begin{titlepage}
+\BgThispage
+\newgeometry{left=1cm,right=4cm}
+\vspace*{2cm}
+\noindent
+\textcolor{white}{\bigsf Dynamic Parallel Checker\\[0.5cm] \begin{huge}Semesterarbeit - Technische Dokumentation\end{huge}}
+\vspace*{2.0cm}\par
+\noindent
+\begin{minipage}{0.35\linewidth}
+    \begin{flushright}
+        \printauthor
+    \end{flushright}
+\end{minipage} \hspace{15pt}
+%
+\begin{minipage}{0.02\linewidth}
+    \rule{1pt}{300pt}
+\end{minipage} \hspace{40pt}
+%
+\begin{minipage}{0.6\linewidth}
+\begin{center}
+\begin{huge}
+Eine Studie über Dynamic Parallel Checking Methoden
+\end{huge}
+\end{center}
+\end{minipage}
+\end{titlepage}
+\restoregeometry
+
+\newpage
+\tableofcontents 
+\newpage
+
+\section{Abstract}
+\section{Management Summary}
+\section{Technischer Bericht}
+\subsection{Einleitung und Übersicht}
+\subsubsection{Dynamic Checker}
+\subsubsection{Vector Clock}
+\subsubsection{Happened-Before Beziehung}
+\subsubsection{Race Condition}
+\subsection{Vektor Clock Algorithmus}
+\subsubsection{Vector Clock pro Thread}
+\subsubsection{Lock-History}
+\subsubsection{Funktion}
+\subsection{Schlussfolgerungen}
+\subsection{Backlog}
+\section{Glossar}
+\section{Literaturverzeichnis}
+\renewcommand{\section}[2]{}%
+\begin{thebibliography}{xxxxxxxxxxxxx}
+\bibitem[BMBF, 2003]{bmbf}"'IT-Ausstattung der allgemein bildenden und berufsbildenden 
+                         Schulen in Deutschland"', http://www.schulen-ans-netz.de/   
+                         neuemedien/fakten/dokus/it-ausstattung-2003.pdf, 10.03.2005
+\end{thebibliography}
+\end{document}
