@@ -117,6 +117,14 @@ Eine Studie über Dynamic Parallel Checking Methoden
 \subsubsection{Dynamic Checker}
 \subsubsection{Vector Clock}
 \subsubsection{Happened-Before Beziehung}
+Die Happened-Before Beziehung wird dazu verwendet, innerhalb des Dynamic Checker Algorithmus zu bestimmen, welche Lese- und Schreibzugriffe parallel zueinander stattgefunden haben. Durch die Nebenläufigkeit kann keine totale Ordnung hergestellt werden. \\
+Mit Hilfe der Vektor Clock wird jedem Lese- und Schreibzugriff der aktuelle Vector Clock Zeitstempel des Current Threads zugewiesen. Die Happened-Before Beziehung ermöglicht dann es verschiedene Zugriffe in eine Partielle Ordnung zu bringen.\\
+Eigenschaften der Happened-Before Beziehung:
+\begin{itemize}
+\item Auf demselben Prozess: a -> b wenn die Zeit von a < b. (Zeit ist durch lokale Uhr gegeben)
+\item Wenn eine Synchronisation zwischen zwei Threads durchgeführt wurde, dann a -> b wenn a der Thread von dem aus synchronisiert wird und b der Thread ist zu dem synchronisiert wird.
+\item Für drei Zugriffe mit Synchronisation a, b, c, wenn a -> b und b -> c, dann a -> c (Transitivität)
+\end{itemize}
 \subsubsection{Race Condition}
 \subsection{Vektor Clock Algorithmus}
 \subsubsection{Vector Clock pro Thread}
