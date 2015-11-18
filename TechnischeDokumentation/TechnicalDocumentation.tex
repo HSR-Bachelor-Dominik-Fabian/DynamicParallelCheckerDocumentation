@@ -111,10 +111,21 @@ Eine Studie über Dynamic Parallel Checking Methoden
 \newpage
 
 \section{Abstract}
+\begin{flushleft}
+Dieses Projekt handelt von der Entwicklung eines Dynamic Parallel Checker. Der Dynamic Checker überprüft während der Laufzeit ob Nebenläufigkeitsfehler (Race Conditions) auftreten. Um dieses Projekt realisieren zu können, musste ein Algorithmus entwickelt und eine Möglichkeit zur Laufzeitsanalyse evaluiert werden.
+\end{flushleft}
 \section{Management Summary}
 \section{Technischer Bericht}
 \subsection{Einleitung und Übersicht}
 \subsubsection{Dynamic Checker}
+\begin{flushleft}
+Um Race Conditions (sh. \ref{race_conditons}) zu erkennen, gibt es verschiedene Ansätze. Zwei davon sind, der Dynamic Checker und der Static Checker. In diesem Projekt
+wird ein Dynamic Checker entwickelt. Ein dynamic Checker hat die Aufgabe, Race Conditions zur Laufzeit (dynamic) zu erkennen. Der Static Checker
+im Gegensatz behandelt das Erkennen zur Entwicklungszeit. Um einen Dynamic Checker realisieren zu können, muss ein fertiges Programm instrumentiert werden.
+Mit Instrumentation ist gemeint, dass der Kompilierte Code angepasst wird, so dass er während der Laufzeit einen Erkennungsalgorithmus ausführen kann, jedoch nicht das Verhalten des Programms verändert.\\
+Der Checker analysiert hauptsächlich Lese- und Schreibzugriffe auf Variablen. Um die Präzision zu erhöhen, müssen auch Lock/ Unlock und Thread.Start usw. ausgelesen werden.\\
+Mehr informationen dazu unter: \ref{clock_algorithm} Vector Clock Algorithmus
+\end{flushleft}
 \subsubsection{Vector Clock}
 \subsubsection{Happened-Before Beziehung}
 Die Happened-Before Beziehung wird dazu verwendet, innerhalb des Dynamic Checker Algorithmus zu bestimmen, welche Lese- und Schreibzugriffe parallel zueinander stattgefunden haben. Durch die Nebenläufigkeit kann keine totale Ordnung hergestellt werden. \\
