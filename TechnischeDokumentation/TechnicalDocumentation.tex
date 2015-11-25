@@ -124,7 +124,7 @@ wird ein Dynamic Checker entwickelt. Ein dynamic Checker hat die Aufgabe, Race C
 im Gegensatz behandelt das Erkennen zur Entwicklungszeit. Um einen Dynamic Checker realisieren zu können, muss ein fertiges Programm instrumentiert werden.
 Mit Instrumentation ist gemeint, dass der Kompilierte Code angepasst wird, so dass er während der Laufzeit einen Erkennungsalgorithmus ausführen kann, jedoch nicht das Verhalten des Programms verändert.\\
 Der Checker analysiert hauptsächlich Lese- und Schreibzugriffe auf Variablen. Um die Präzision zu erhöhen, müssen auch Lock/ Unlock und Thread.Start usw. ausgelesen werden.\\
-Mehr informationen dazu unter: \ref{Vektor Clock Algorithmus} Vector Clock Algorithmus
+Mehr informationen dazu unter: \ref{vector_algorithm} Vector Clock Algorithmus
 \end{flushleft}
 \subsubsection{Vector Clock}
 
@@ -146,8 +146,8 @@ Test
 \textbf{{\large Concurrent}}\\
 Test
 \end{flushleft}
-\subsubsection{Race Condition}
-\subsection{Vektor Clock Algorithmus}
+\subsubsection{Race Condition}\label{race_conditons}
+\subsection{Vektor Clock Algorithmus}\label{vector_algorithm}
 \subsubsection{Vector Clock pro Thread}
 \subsubsection{Lock-History}
 \subsubsection{Funktion}
