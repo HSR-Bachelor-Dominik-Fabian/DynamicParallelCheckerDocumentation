@@ -6,6 +6,7 @@
 \usepackage{german}
 \usepackage{fancyhdr}
 \usepackage{graphicx}
+\usepackage[german]{babel}
 \usepackage{geometry}
 \usepackage{listings}
 \usepackage{hyperref}
@@ -164,9 +165,24 @@ Konto + 200 & Konto - 100 \\
 \caption[Beispiel Race Condition]{Ein unsynchronisierter Zugriff auf ein Konto}
 \label{fig:exampleRaceCondition}
 \end{figure}\\
-Unter \autoref{fig:exampleRaceCondition} ist ein typisches Beispiel einer Race Condition beschrieben. Der Befehl + oder - setzt sich folgendermassen zusammen:
-Lesen, Addieren, Speichern.\\
-Wenn zwei Threads dies parallel Ausführen, ist nicht deterministisch welcher Thread wann durchgeführt wird. Daher kann die Situation entstehen bei der zuerst Thread 1 liest, dann Thread 2 liest und erst danach Thread 1 addiert und speichert. Thread 2 hat dann immernoch den alten Wert in seiner Berechnung und überschreibt das Konto dann anstatt mit 200 mit 0. Dies ist eine typische Race Condition
+Unter \autoref{fig:exampleRaceCondition} ist ein typisches Beispiel einer Race Condition beschrieben.\\
+Wenn zwei Threads dies parallel Ausführen, ist nicht deterministisch welcher Thread wann durchgeführt wird. Die Situation in \autoref{fig:exampleRaceCondition2} kann entstehen. Dabei erfährt der zweite Thread nicht, das der erste Thread den Wert angepasst hat.
+\begin{figure}[h]
+\centering
+\begin{tabular}{|cc|}
+\hline
+Thread 1 & Thread 2\\
+Lesen Konto = 100 & \\
+& Lesen Konto = 100\\
+Addieren 100 + 200 & Addieren 100 - 100\\
+Speichern 300 &\\
+& Speichern 0\\
+\multicolumn{2}{|c|}{Konto = 0}\\
+\hline
+\end{tabular}
+\caption[Race Condition]{Ablauf eines unnsynchronisierten Zugriff}
+\label{fig:exampleRaceCondition2}
+\end{figure}
 \end{flushleft}
 
 \subsection{Vektor Clock Algorithmus}\label{vector_algorithm}
