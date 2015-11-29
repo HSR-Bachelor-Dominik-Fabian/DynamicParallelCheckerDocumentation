@@ -6,6 +6,7 @@
 \usepackage{german}
 \usepackage{fancyhdr}
 \usepackage{graphicx}
+\usepackage[german]{babel}
 \usepackage{geometry}
 \usepackage{listings}
 \usepackage{hyperref}
@@ -77,6 +78,7 @@ contents={\begin{tikzpicture}[remember picture,overlay]
     Semester 5 \\
     \texttt{d1heeb@hsr.ch}
     }
+\renewcommand{\listfigurename}{}
 \begin{document}
 \begin{titlepage}
 \BgThispage
@@ -149,6 +151,43 @@ Test
 Test
 \end{flushleft}
 \subsubsection{Race Condition}\label{race_conditons}
+\begin{flushleft}
+Bei Race Conditions handelt es sich um Speicherzugriffsfehler. Es gibt 2 Stufen von Race Conditions: Data Races und Semantisch höhere Race Conditions.\\
+Beide Kategorien entstehen durch Synchronisationsfehlern zwischen zwei Threads, welche auf die gleiche Ressource zugreiffen.
+\begin{figure}[h]
+\centering
+\begin{tabular}{|cc|}
+\hline
+\multicolumn{2}{|c|}{Konto = 100} \\ 
+ &  \\ 
+Thread 1 & Thread 2 \\ 
+Konto + 200 & Konto - 100 \\ 
+\hline
+\end{tabular}
+\caption[Beispiel Race Condition]{Ein unsynchronisierter Zugriff auf ein Konto}
+\label{fig:exampleRaceCondition}
+\end{figure}\\
+Unter \autoref{fig:exampleRaceCondition} ist ein typisches Beispiel einer Race Condition beschrieben.\\
+Wenn zwei Threads dies parallel Ausführen, ist nicht deterministisch welcher Thread wann durchgeführt wird. Die Situation in \autoref{fig:exampleRaceCondition2} kann entstehen. Dabei erfährt der zweite Thread nicht, das der erste Thread den Wert angepasst hat.
+\begin{figure}[h]
+\centering
+\begin{tabular}{|cc|}
+\hline
+Thread 1 & Thread 2\\
+Lesen Konto = 100 & \\
+& Lesen Konto = 100\\
+Addieren 100 + 200 & Addieren 100 - 100\\
+Speichern 300 &\\
+& Speichern 0\\
+\multicolumn{2}{|c|}{Konto = 0}\\
+\hline
+\end{tabular}
+\caption[Race Condition]{Ablauf eines unnsynchronisierten Zugriff}
+\label{fig:exampleRaceCondition2}
+\end{figure}
+\end{flushleft}
+
+\subsection{Vektor Clock Algorithmus}\label{vector_algorithm}
 \subsection{Implementation}\label{implementation}
 In diesem Kapitel wird die Implementation der 
 \subsubsection{Vector Clock Algorithmus}\label{vector_algorithm}
@@ -160,6 +199,8 @@ In diesem Kapitel wird die Implementation der
 \section{Glossar}
 - Partielle Ordnung\\
 - Totale Ordnung
+\section{Abbildungsverzeichnis}
+\listoffigures
 \section{Literaturverzeichnis}
 \renewcommand{\section}[2]{}%
 \begin{thebibliography}{xxxxxxxxxxxxx}
