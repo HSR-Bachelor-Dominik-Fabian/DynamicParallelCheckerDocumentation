@@ -184,12 +184,35 @@ Test
 \textbf{{\large Concurrent}}\\
 Test
 \end{flushleft}
-
+\subsubsection{Vector Clock}
+Die einzelnen Lese- und Schreibzugriffe in einem System können asynchron in unterschiedlichen Threads ablaufen und dadurch nicht in eine totale Ordnung gebracht werden. Um nun jedem einzelnen Zugriff einen Zeitstempel zuzuordnen verwenden wir eine Vector Clock. Diese Vector Clock wird benötigt um eine Aussage über die Nebenläufigkeit der einzelnen Zugriffe zu machen.\\
+Die Vector Clock basiert auf der Lamport's Clock von Leslie B. Lamport. Jeder Teilnehmer in einem System, in unserem Fall wären dies die einzelnen Threads, besitzt ein eigener Zeitstempel. Der eigene Zeitstempel kann unabhängig inkrementiert werden. Eine Synchronisation zwischen den Zeitstempeln der Threads findet jedoch nur statt wenn ein Synchronisationspunkt vorliegt. Ein Synchronisationspunkt ist z.B. wenn ein Thread 1 ein Lock auf ein Objekt a macht und zuvor ein anderer Thread 2 ein Unlock auf das Objekt a gemacht hat. Dadurch ist sichergestellt, dass jeder Zugriff vor dem Unlock von Thread 1 sicher vor jedem Zugriff nach dem Lock von Thread 2 stattgefunden hat. In diesem Fall wird nun der Zeitstempel von Thread 2 mit dem Zeitstempel von Thread 1 synchronisiert. Der Zeitstempel von Thread 1 bleibt wie gehabt. Mehr Informationen über die einzelnen Synchronisationspunkte finden Sie im Kapitel \ref{implementation} Implementation.\\
+Die Vector Clock erweitert die Lamport Clock nun dadurch, dass jeder Thread nicht nur einen globalen Zeitstempel besitzt sondern einen Vektor, der für jeden Thread einen eigenen Zeitstempel mitführt. D.h. jeder Thread besitzt nun einen eigenen Vektor mit den Zeitstempeln der anderen Threads. Jedoch befindet sich darin nicht der aktuelle Zeitstempel sondern der Zeitstempel der letzten Synchronisation mit dem jeweiligen Thread. Mit Hilfe der Vector Clock kann nun eine Aussage über die Nebenläufigkeit der einzelnen Lese- und Schreibzugriffe eines Thread gemacht werden.
+\subsubsection{Happened-Before Beziehung}
+\begin{flushleft}
+Um mit Hilfe der Vector Clock die Nebenläufigkeit von Lese- und Schreibzugriffe zu bestimmen, verwenden wir die Happened-Before Beziehung von Leslie B. Lamport. Diese Beziehung wird in der Lamport Clock und in der Vector Clock verwendet um eine partielle Ordnung innerhalb mehreren Ereignissen herzustellen. Bei neben läufigen Programmen kann keine totale Ordnung erreicht werden, daher muss mit einer partiellen Ordnung gearbeitet werden.\\
+Unser Algorithmus vergleicht lediglich die Zugriffe, die neben läufig stattgefunden haben und verwendet dazu die Happened-Before Beziehung.\\
+Die Happened-Before Beziehung ermöglicht es dann eine Aussage zu den Beziehungen zwischen den einzelnen Lese- und Schreibzugriffe der unterschiedlichen Thread oder Tasks zu machen.\\[0.5cm]
+Eigenschaften der Happened-Before Beziehung:
+\begin{itemize}
+\item Auf demselben Thread oder Task: a -> b wenn die Zeit von a < b. (Zeit ist durch Vector Clock gegeben)
+\item Wenn eine Synchronisation zwischen zwei Threads oder Tasks durchgeführt wurde, dann a -> b wenn a der Thread oder Task ist von dem aus synchronisiert wird und b der Thread oder Task ist zu dem synchronisiert wird.
+\item Für drei Zugriffe mit Synchronisation a, b, c, wenn a -> b und b -> c, dann a -> c (Transitivität)
+\end{itemize}
+Unser Algorithmus vergleicht jede Komponente der Vector Clock von Zugriff a mit der passenden Komponente der Vector Clock von Zugriff b. Dabei können zwei verschiedene Beziehungen bestehen:\\[0.5cm]
+\textbf{{\small Happened Before}}\\
+Test
+\\[0.5cm]
+\textbf{{\small Concurrent}}\\
+Test
+\end{flushleft}
 \subsection{Vektor Clock Algorithmus}\label{vector_algorithm}
+\subsection{Implementation}\label{implementation}
+In diesem Kapitel wird die Implementation der 
+\subsubsection{Vector Clock Algorithmus}\label{vector_algorithm}
 \subsubsection{Vector Clock pro Thread}
 \subsubsection{Lock-History}
 \subsubsection{Funktion}
-\subsection{Implementation}
 \subsection{Schlussfolgerungen}
 \subsection{Backlog}
 \section{Glossar}
