@@ -6,7 +6,6 @@
 \usepackage{german}
 \usepackage{fancyhdr}
 \usepackage{graphicx}
-\usepackage[german]{babel}
 \usepackage{geometry}
 \usepackage{listings}
 \usepackage{hyperref}
@@ -78,7 +77,6 @@ contents={\begin{tikzpicture}[remember picture,overlay]
     Semester 5 \\
     \texttt{d1heeb@hsr.ch}
     }
-\renewcommand{\listfigurename}{}
 \begin{document}
 \begin{titlepage}
 \BgThispage
@@ -119,6 +117,7 @@ In diesem Projekt werden verschiedene Methoden zur dynamischen Analyse von Paral
 \end{flushleft}
 \section{Technischer Bericht}
 \subsection{Einleitung und Übersicht}
+Dieses Kapitel beinhaltet eine Beschreibung der verwendeten Konzepte und Technologien dieses Projekts. Für das Verständnis des gesamten technischen Berichts empfehlen wir das Lesen dieses Teils. Bei bereits vorhandener Fachkenntnis bezüglich der Thematik kann dieser Teil gerne übersprungen werden und direkt die Implementation betrachtet werden.
 \subsubsection{Dynamic Checker}
 \begin{flushleft}
 Um Race Conditions (sh. \ref{race_conditons}) zu erkennen, gibt es verschiedene Ansätze. Zwei davon sind, der Dynamic Checker und der Static Checker. In diesem Projekt
@@ -134,21 +133,30 @@ Die Vector Clock basiert auf der Lamport's Clock von Leslie B. Lamport. Jeder Te
 Die Vector Clock erweitert die Lamport Clock nun dadurch, dass jeder Thread nicht nur einen globalen Zeitstempel besitzt sondern einen Vektor, der für jeden Thread einen eigenen Zeitstempel mitführt. D.h. jeder Thread besitzt nun einen eigenen Vektor mit den Zeitstempeln der anderen Threads. Jedoch befindet sich darin nicht der aktuelle Zeitstempel sondern der Zeitstempel der letzten Synchronisation mit dem jeweiligen Thread. Mit Hilfe der Vector Clock kann nun eine Aussage über die Nebenläufigkeit der einzelnen Lese- und Schreibzugriffe eines Thread gemacht werden.
 \subsubsection{Happened-Before Beziehung}
 \begin{flushleft}
-Um mit Hilfe der Vector Clock die Nebenläufigkeit von Lese- und Schreibzugriffe zu bestimmen, verwenden wir die Happened-Before Beziehung von Leslie B. Lamport. Diese Beziehung wird in der Lamport Clock und in der Vector Clock verwendet um eine partielle Ordnung innerhalb mehreren Ereignissen herzustellen. Bei neben läufigen Programmen kann keine totale Ordnung erreicht werden, daher muss mit einer partiellen Ordnung gearbeitet werden.\\
-Unser Algorithmus vergleicht lediglich die Zugriffe, die neben läufig stattgefunden haben und verwendet dazu die Happened-Before Beziehung.\\
-Die Happened-Before Beziehung ermöglicht es dann eine Aussage zu den Beziehungen zwischen den einzelnen Lese- und Schreibzugriffe der unterschiedlichen Thread oder Tasks zu machen.\\[0.5cm]
-Eigenschaften der Happened-Before Beziehung:
+Um mit Hilfe der Vector Clock die Nebenläufigkeit von Lese- und Schreibzugriffe zu bestimmen, verwenden wir die Happened-Before Beziehung von Leslie B. Lamport. Diese Beziehung wird in der Lamport Clock und in der Vector Clock verwendet um eine partielle Ordnung innerhalb mehreren Ereignissen herzustellen. Bei neben läufigen Programmen kann keine totale Ordnung erreicht werden, daher muss mit einer partiellen Ordnung gearbeitet werden. Unserem Algorithmus genügt die partielle Ordnung soweit, da ihn lediglich die Zugriffe interessieren, die neben läufig stattgefunden haben. \\
+Die Happened-Before Beziehung vergleicht die Zeitstempel von zwei unterschiedlichen Zugriffen und kann dann eine Aussage darüber machen, ob diese nun neben läufig oder zwingend nacheinander stattgefunden haben. Folgende Eigenschaften definieren die Happened-Before Beziehung:
 \begin{itemize}
 \item Auf demselben Thread oder Task: a -> b wenn die Zeit von a < b. (Zeit ist durch Vector Clock gegeben)
 \item Wenn eine Synchronisation zwischen zwei Threads oder Tasks durchgeführt wurde, dann a -> b wenn a der Thread oder Task ist von dem aus synchronisiert wird und b der Thread oder Task ist zu dem synchronisiert wird.
 \item Für drei Zugriffe mit Synchronisation a, b, c, wenn a -> b und b -> c, dann a -> c (Transitivität)
 \end{itemize}
-Unser Algorithmus vergleicht jede Komponente der Vector Clock von Zugriff a mit der passenden Komponente der Vector Clock von Zugriff b. Dabei können zwei verschiedene Beziehungen bestehen:\\[0.5cm]
-\textbf{{\small Happened Before}}\\
-Test
+Die Happened-Before Beziehung kann somit eine Aussage darüber machen, ob zwischen zwei unterschiedlichen Lese- oder Schreibzugriffen eine Synchronisation stattgefunden hat. Die Synchronisation zeigt, dass diese Zugriffe zwingend sequentiell abgelaufen sind und dadurch keine potenzielle Race Condition darstellen können. Die Zugriffe können folgende Beziehungen zueinander haben:\\[0.5cm]
+\textbf{ Happened Before}\\[0.2cm]
+\end{flushleft}
+\begin{center}
+\begin{tabular}{ c c }
+  (x1, x2, x3, ...) -> (y1, y2, y3, ...) \\
+  y1 >= x1 \\
+  y2 >= x2 \\
+  y3 >= x3 \\
+  ... >= ... \\[0.2cm]
+\end{tabular}
+\end{center}
+\begin{flushleft}
+Der Zeitstempel eines Threads 1 in einer Vector Clock ist grösser oder gleich (>=) dem Zeitstempel des selben Threads 1 in der Vector Clock von Thread 2. Mindestens eine Kompontente der gesamten Vector Clock muss aber echt grösser (>) sein als in der anderen Vector Clock. In dieser Beziehung hat sicher eine Synchronisation zwischen den beiden Threads 1 und 2 stattgefunden und dadurch sind diese beiden Zugriffe keine potenzielle Race Condition.
 \\[0.5cm]
-\textbf{{\small Concurrent}}\\
-Test
+\textbf{Nebenläufig}\\[0.2cm]
+
 \end{flushleft}
 \subsubsection{Race Condition}\label{race_conditons}
 \begin{flushleft}
@@ -187,7 +195,6 @@ Speichern 300 &\\
 \end{figure}
 \end{flushleft}
 
-\subsection{Vektor Clock Algorithmus}\label{vector_algorithm}
 \subsection{Implementation}\label{implementation}
 In diesem Kapitel wird die Implementation der 
 \subsubsection{Vector Clock Algorithmus}\label{vector_algorithm}
