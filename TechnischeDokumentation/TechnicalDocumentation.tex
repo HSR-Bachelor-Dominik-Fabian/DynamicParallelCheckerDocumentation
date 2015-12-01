@@ -15,6 +15,7 @@
 \usepackage[usenames,dvipsnames]{xcolor}
 \usepackage{DejaVuSans}
 \usepackage[T1]{fontenc}
+\usepackage{amsmath}
 
 \renewcommand*{\familydefault}{\sfdefault}
 \geometry{verbose,a4paper,tmargin=35mm,bmargin=35mm,lmargin=25mm,rmargin=25mm}
@@ -115,8 +116,13 @@ Eine Studie über Dynamic Parallel Checking Methoden
 \section{Abstract}
 \begin{flushleft}
 In diesem Projekt werden verschiedene Methoden zur dynamischen Analyse von Parallelem Code evaluiert. Dafür wird ein Dynamic Parallel Checker Prototyp entwickelt, der während der Laufzeit überprüft ob Nebenläufigkeitsfehler (Race Conditions) auftreten. Ebenfalls Inhalt dieses Projekts ist es, einen eigenen Algorithmus zu entwickeln, der die Laufzeitanalyse ermöglicht. Diesbezüglich haben wir uns für einen Algorithmus entschieden, der mit Hilfe einer Vector Clock eine partielle Ordnung innerhalb der Lese- und Schreibzugriffe von den verschiedenen Threads herstellen kann.\\
-
+Um eine Applikation zu überwachen wird der Microsoft Intermediate Language Code der Applikation mit Hilfe des Frameworks Mono.Cecil instrumentiert. Dabei werden nur die Operation Codes instrumentiert, die einen Lese- oder Schreizugriff durchführen, oder mit der Synchronisation zwischen zwei Threads oder Tasks zu tun haben.\\
+Im Rahmen unseres Projektes haben wir uns auf einen gewissen Umfang der Instrumentierung beschränkt, dazu mehr im Kapitel \ref{implementation} Implementation.\\
+Die Erkennung von Race Conditions findet innerhalb unserer eigenen Dynamic Parallel Checker Library statt. Damit diese Library die benötigten Informationen erhält, wann welcher Thread einen Lese- oder Schreibzugriff auf welche Ressource durchgeführt hat, fügen wir bei den relevanten Operation Codes des IL Codes einen Aufruf auf unsere Library hinzu. 
+Diesem Aufruf übergeben wir die Referenz zu der Ressource, auf die zugegriffen wurde, die Zeilennummer des IL Codes und den Methodennamen, in dem der Zugriff stattgefunden hat. In der Library wird für jeden Thread oder Task eine eigene History der Lese- und Schreibzugriffe mitgeführt. Diese Informationen werden verwendet um die neben läufigen Zugriffe zu identifizieren und um dann zu überprüfen, ob eine Race Condition auftrat. Zusätzlich zu der Zugriffs-History wird auch noch eine Lock-History geführt, die es erlaubt eine Synchronisation zwischen zwei Threads oder Tasks , die durch einen Lock zwingend sequenziell abgelaufen sind, durchzuführen. Mehr dazu im Kapitel \ref{lock_history} Lock-History.\\
+Unser Projekt beinhaltet ebenfalls eine WPF Applikation, die es ermöglicht unsere Library zu nutzen. Unsere DPC Library meldet alle Race Conditions an diese Applikation und stellt diese in einer Liste dar. Als kleines Zusatzfeature für die Erleichterung der Fehlersuche dekompilieren wir den Code der betroffenen Methoden und stellen diesen ebenfalls dar.\\
 \end{flushleft}
+\newpage
 \section{Technischer Bericht}
 \subsection{Einleitung und Übersicht}
 Dieses Kapitel beinhaltet eine Beschreibung der verwendeten Konzepte und Technologien dieses Projekts. Für das Verständnis des gesamten technischen Berichts empfehlen wir das Lesen dieses Teils. Bei bereits vorhandener Fachkenntnis bezüglich der Thematik kann dieser Teil gerne übersprungen werden und direkt die Implementation betrachtet werden.
@@ -168,7 +174,8 @@ Race Conditions wie unter \autoref{fig:exampleRaceCondition2} sind gefährlich, 
 \subsubsection{Vector Clock}
 Die einzelnen Lese- und Schreibzugriffe in einem System können asynchron in unterschiedlichen Threads ablaufen und dadurch nicht in eine totale Ordnung gebracht werden. Um nun jedem einzelnen Zugriff einen Zeitstempel zuzuordnen verwenden wir eine Vector Clock. Diese Vector Clock wird benötigt um eine Aussage über die Nebenläufigkeit der einzelnen Zugriffe zu machen.\\
 Die Vector Clock basiert auf der Lamport's Clock von Leslie B. Lamport. Jeder Teilnehmer in einem System, in unserem Fall wären dies die einzelnen Threads, besitzt ein eigener Zeitstempel. Der eigene Zeitstempel kann unabhängig inkrementiert werden. Eine Synchronisation zwischen den Zeitstempeln der Threads findet jedoch nur statt wenn ein Synchronisationspunkt vorliegt. Ein Synchronisationspunkt ist z.B. wenn ein Thread 1 ein Lock auf ein Objekt a macht und zuvor ein anderer Thread 2 ein Unlock auf das Objekt a gemacht hat. Dadurch ist sichergestellt, dass jeder Zugriff vor dem Unlock von Thread 1 sicher vor jedem Zugriff nach dem Lock von Thread 2 stattgefunden hat. In diesem Fall wird nun der Zeitstempel von Thread 2 mit dem Zeitstempel von Thread 1 synchronisiert. Der Zeitstempel von Thread 1 bleibt wie gehabt. Mehr Informationen über die einzelnen Synchronisationspunkte finden Sie im Kapitel \ref{implementation} Implementation.\\
-Die Vector Clock erweitert die Lamport Clock nun dadurch, dass jeder Thread nicht nur einen globalen Zeitstempel besitzt sondern einen Vektor, der für jeden Thread einen eigenen Zeitstempel mitführt. D.h. jeder Thread besitzt nun einen eigenen Vektor mit den Zeitstempeln der anderen Threads. Jedoch befindet sich darin nicht der aktuelle Zeitstempel sondern der Zeitstempel der letzten Synchronisation mit dem jeweiligen Thread. Mit Hilfe der Vector Clock kann nun eine Aussage über die Nebenläufigkeit der einzelnen Lese- und Schreibzugriffe eines Thread gemacht werden.
+Die Vector Clock erweitert die Lamport Clock nun dadurch, dass jeder Thread nicht nur einen globalen Zeitstempel besitzt sondern einen Vektor, der für jeden Thread einen eigenen Zeitstempel mitführt. D.h. jeder Thread besitzt nun einen eigenen Vektor mit den Zeitstempeln der anderen Threads. Jedoch befindet sich darin nicht der aktuelle Zeitstempel sondern der Zeitstempel der letzten Synchronisation mit dem jeweiligen Thread. Mit Hilfe der Vector Clock kann nun eine Aussage über die Nebenläufigkeit der einzelnen Lese- und Schreibzugriffe eines Thread gemacht werden.\\
+Beispiel:\\
 \subsubsection{Happened-Before Beziehung}
 \begin{flushleft}
 Um mit Hilfe der Vector Clock die Nebenläufigkeit von Lese- und Schreibzugriffe zu bestimmen, verwenden wir die Happened-Before Beziehung von Leslie B. Lamport. Diese Beziehung wird in der Lamport Clock und in der Vector Clock verwendet um eine partielle Ordnung innerhalb mehreren Ereignissen herzustellen. Bei neben läufigen Programmen kann keine totale Ordnung erreicht werden, daher muss mit einer partiellen Ordnung gearbeitet werden. Unserem Algorithmus genügt die partielle Ordnung soweit, da ihn lediglich die Zugriffe interessieren, die neben läufig stattgefunden haben. \\
@@ -196,11 +203,13 @@ Der Zeitstempel eines Threads 1 in einer Vector Clock ist grösser oder gleich (
 \textbf{Nebenläufig}\\[0.2cm]
 
 \end{flushleft}
+\subsubsection{Microsoft IL Code}
+- IL Erklärung\\
+- Operation Codes
 \subsection{Implementation}\label{implementation}
-In diesem Kapitel wird die Implementation der 
 \subsubsection{Vector Clock Algorithmus}\label{vector_algorithm}
 \subsubsection{Vector Clock pro Thread}
-\subsubsection{Lock-History}
+\subsubsection{Lock-History}\label{lock_history}
 \subsubsection{Funktion}
 \subsection{Schlussfolgerungen}
 \subsection{Backlog}
