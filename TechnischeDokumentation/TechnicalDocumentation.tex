@@ -208,10 +208,34 @@ Die Happened-Before Beziehung kann somit eine Aussage darüber machen, ob zwisch
 \end{tabular}
 \end{center}
 \begin{flushleft}
-Der Zeitstempel eines Threads 1 in einer Vector Clock ist grösser oder gleich (>=) dem Zeitstempel des selben Threads 1 in der Vector Clock von Thread 2. Mindestens eine Kompontente der gesamten Vector Clock muss aber echt grösser (>) sein als in der anderen Vector Clock. In dieser Beziehung hat sicher eine Synchronisation zwischen den beiden Threads 1 und 2 stattgefunden und dadurch sind diese beiden Zugriffe keine potenzielle Race Condition.
+Der Zeitstempel eines Threads 1 in einer Vector Clock ist grösser oder gleich (>=) dem Zeitstempel des selben Threads 1 in der Vector Clock von Thread 2. Mindestens eine Kompontente der gesamten Vector Clock muss aber echt grösser (>) sein als in der anderen Vector Clock. In dieser Beziehung hat sicher eine Synchronisation zwischen den beiden Threads 1 und 2 stattgefunden und dadurch sind diese beiden Zugriffe keine potenzielle Race Condition.\\
+Beispiel (T1 happened before T2):\\
+\[
+	T1 = \begin{pmatrix}
+		T1 & 1\\
+		T2 & 0\\
+	\end{pmatrix}
+	, T2 = \begin{pmatrix}
+		T1 & 1\\
+		T2 & 2\\
+	\end{pmatrix}
+\]
 \\[0.5cm]
-\textbf{Nebenläufig}\\[0.2cm]
-
+\textbf{Concurrent}\\[0.2cm]
+Concurrent bedeutet, dass zwischen zwei Zugriffen auf zwei unterschiedlichen Threads keine Synchronisation durch z.B. einen Lock geschah. Diese Zugriffe können eine potentielle Race Condition darstellen, falls sie auf die selbe Ressource zugegriffen haben.\\
+Sollten also beim Vergleich der Vector Clocks von zwei Zugriffen nicht alle Elemente aus Vektor 1 grösser gleich (>=) oder alle Elemente kleiner gleich (<=) sein wie das dazugehörige Element im Vektor 2, passierten diese Zugriffe neben läufig. Mit anderen Worten, wenn die erste Definition von "Happened-Before" auf die Vector Clocks nicht angewendet werden kann. Unser Algorithmus interessiert sich genau für diese Zugriffspaare und daher ist die Happened-Before Beziehung zentral für das Funktionieren des Algorithmus. \\
+Beispiel:\\
+\[
+	T1 = \begin{pmatrix}
+		T1 & 2\\
+		T2 & 1\\
+	\end{pmatrix}
+	, T2 = \begin{pmatrix}
+		T1 & 1\\
+		T2 & 2\\
+	\end{pmatrix}
+\]
+\\[0.5cm]
 \end{flushleft}
 \subsubsection{Microsoft IL Code}
 - IL Erklärung\\
