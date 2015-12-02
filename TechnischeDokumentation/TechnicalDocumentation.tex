@@ -238,6 +238,11 @@ Beispiel:\\
 \\[0.5cm]
 \end{flushleft}
 \subsubsection{Microsoft IL Code}
+Der Microsoft IL (Intermediate Language) Code wird verwendet um einen Zwischencode, zwischen dem Compiler und dem Prozessor zu bilden. Da der IL Code vereinheitlicht definiert ist, ist er unabhängig vom verwendeten Prozessor. In diesem Zustand wird das Programm zum Kunden ausgeliefert und erst auf der Maschine dur einen JIT (Just in Time) Compiler zur Laufzeit kompiliert. Dieses Verfahren besitzt den Vorteil, dass der Code auf das jeweilige System abgestimmt wird und dadurch die Funktionen des Prozessors optimal ausnützt. Der Nachteil ist jedoch der Performanceverlust, da jede Methode vor dem Ausführen noch kompiliert werden muss.\\
+Für die Instrumentation, welche für den Dynamic Parallel Checker verwendet wird, ist der IL Code ideal, da er vereinheitlicht ist und daher nur eine Implementation entwickelt werden muss, welche für alle .Net Sprachen, sowie jedes Laufzeitsystem welches .Net unterstützt funktioniert.\\
+Der MSIL Code ist Stack-basiert. Dies bedeutet das alle Operationen auf einem Stack durchgeführt werden, welcher nach dem LIFO Prinzipe (Last In, First Out) arbeitet.
+\\
+TODO:
 - IL Erklärung\\
 - Operation Codes
 \subsection{Implementation}\label{implementation}
