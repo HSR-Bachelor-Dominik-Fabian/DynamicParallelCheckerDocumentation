@@ -7,6 +7,7 @@
 \usepackage{fancyhdr}
 \usepackage{graphicx}
 \usepackage[german]{babel}
+\renewcommand{\listfigurename}{Test}
 \usepackage{geometry}
 \usepackage{listings}
 \usepackage{hyperref}
@@ -80,7 +81,7 @@ contents={\begin{tikzpicture}[remember picture,overlay]
     Semester 5 \\
     \texttt{d1heeb@hsr.ch}
     }
-\renewcommand{\listfigurename}{}
+
 \begin{document}
 \begin{titlepage}
 \BgThispage
@@ -248,7 +249,11 @@ Der MSIL Code ist Stack-basiert. Dies bedeutet das alle Operationen auf einem St
 \caption{Beispiel einer Minus Operation mit den Parametern (5,2)}
 \label{example_stack}
 \end{figure}
-
+Eine Instruktion im MSIL Code setzt sich jeweils aus einem OpCode und einem Operand zusammen.
+\begin{lstlisting}
+ldsflda    class TestProgram.NewObject TestProgram.Program::_obj1
+\end{lstlisting}
+In diesem Beispiel eines IL Code ist "ldsflda" der OpCode und "class TestProgram.NewObject TestProgram.Program::\_obj1" der Operand. Der OpCode (Operation Code) identifiziert was die Operation durchführen soll. Hier "ldsflda" (Load Static Field Address). Dabei wird vom Operand definierten Static Field die Speicheradresse ausgelesen und auf den Stack gelegt. Der Operand ist daher jeweils die Ressource welche für den OpCode verwendet wird. Der Typ des Operand ist durch den OpCode definiert.\\
 TODO:
 - IL Erklärung\\
 - Operation Codes
@@ -392,5 +397,6 @@ Wir werden nun den Beispiel Code durchspielen und dabei die Lock-History befüll
 \bibitem[BMBF, 2003]{bmbf}"'IT-Ausstattung der allgemein bildenden und berufsbildenden 
                          Schulen in Deutschland"', http://www.schulen-ans-netz.de/   
                          neuemedien/fakten/dokus/it-ausstattung-2003.pdf, 10.03.2005	
+\bibitem[ECMA, 2012]{ecma}"Standard ECMA-335 Common Language Infrastructure (CLI)", http://www.ecma-international.org/publications/standards/Ecma-335.htm, 06.2012
 \end{thebibliography}
 \end{document}
