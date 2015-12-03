@@ -16,6 +16,7 @@
 \usepackage{DejaVuSans}
 \usepackage[T1]{fontenc}
 \usepackage{amsmath}
+\usepackage{float}
 
 \renewcommand*{\familydefault}{\sfdefault}
 \geometry{verbose,a4paper,tmargin=35mm,bmargin=35mm,lmargin=25mm,rmargin=25mm}
@@ -138,7 +139,7 @@ Mehr informationen dazu unter: \ref{vector_algorithm} Vector Clock Algorithmus
 \subsubsection{Race Condition}\label{race_conditons}
 \begin{flushleft}
 Bei Race Conditions handelt es sich um Speicherzugriffsfehler. Diese können durch richtige synchronisation (Codeteile, in welchen nur ein Thread gleichzeitig arbeiten kann) verhindert werden. In \autoref{fig:exampleRaceCondition} wird ein Code beschrieben, welcher diese Synchronisation komplett weglässt und daher Race Conditions entstehen.
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \begin{tabular}{|cc|}
 \hline
@@ -150,9 +151,9 @@ Konto + 200 & Konto - 100 \\
 \end{tabular}
 \caption[Beispiel Race Condition]{Ein unsynchronisierter Zugriff auf ein Konto}
 \label{fig:exampleRaceCondition}
-\end{figure}\\
+\end{figure}
 Wenn zwei Threads den Code unter \autoref{fig:exampleRaceCondition} parallel ausführen, ist nicht deterministisch welcher Thread wann durchgeführt wird. Die Situation in \autoref{fig:exampleRaceCondition2} kann dadurch entstehen. Dabei erfährt der zweite Thread nicht, das der erste Thread den Wert angepasst hat und überschreibt den Wert mit seinen falschen Daten.\\\newpage
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \begin{tabular}{|cc|}
 \hline
@@ -239,9 +240,15 @@ Beispiel:\\
 \end{flushleft}
 \subsubsection{Microsoft IL Code}
 Der Microsoft IL (Intermediate Language) Code wird verwendet um einen Zwischencode, zwischen dem Compiler und dem Prozessor zu bilden. Da der IL Code vereinheitlicht definiert ist, ist er unabhängig vom verwendeten Prozessor. In diesem Zustand wird das Programm zum Kunden ausgeliefert und erst auf der Maschine dur einen JIT (Just in Time) Compiler zur Laufzeit kompiliert. Dieses Verfahren besitzt den Vorteil, dass der Code auf das jeweilige System abgestimmt wird und dadurch die Funktionen des Prozessors optimal ausnützt. Der Nachteil ist jedoch der Performanceverlust, da jede Methode vor dem Ausführen noch kompiliert werden muss.\\
-Für die Instrumentation, welche für den Dynamic Parallel Checker verwendet wird, ist der IL Code ideal, da er vereinheitlicht ist und daher nur eine Implementation entwickelt werden muss, welche für alle .Net Sprachen, sowie jedes Laufzeitsystem welches .Net unterstützt funktioniert.\\
-Der MSIL Code ist Stack-basiert. Dies bedeutet das alle Operationen auf einem Stack durchgeführt werden, welcher nach dem LIFO Prinzipe (Last In, First Out) arbeitet.
-\\
+Für die Instrumentation, welche für den Dynamic Parallel Checker verwendet wird, ist der IL Code ideal, da er vereinheitlicht ist und daher nur eine Implementation entwickelt werden muss, welche für alle .Net Sprachen, sowie jedes Laufzeitsystem welches .Net unterstützt funktioniert.\newpage
+Der MSIL Code ist Stack-basiert. Dies bedeutet das alle Operationen auf einem Stack durchgeführt werden, welcher nach dem LIFO Prinzip (Last In, First Out) arbeitet. Der Stack wird dazu verwendet die Werte vorzubereiten, zu verarbeiten und wieder vom Stack abzubauen. \autoref{example_stack} zeigt wie eine Operation durchgeführt wird und in welchen Schritten die Parameter auf dem Stack vorbereitet werden müssen\\
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.5]{images/BeispielStack.png}
+\caption{Beispiel einer Minus Operation mit den Parametern (5,2)}
+\label{example_stack}
+\end{figure}
+
 TODO:
 - IL Erklärung\\
 - Operation Codes
