@@ -269,6 +269,7 @@ TODO:
 -Instrumentation erklären
 \\
 \end{flushleft}
+\newpage
 \subsection{Implementation}\label{implementation}
 In diesem Kapitel wird die Implementation des Dynamic Prallel Checker genauer erklärt. Unter \ref{example} ist das Beispiel beschrieben an welchem, in den folgenden Kapitel, die Funktion des Dynamic Parallel Checkers beschrieben wird. Der Dynamic Parallel Checker wurde mit C\#.Net entwickelt.
 \subsubsection{Beispiel}\label{example}
@@ -308,7 +309,6 @@ Console.WriteLine(a);
 \end{lstlisting}
 \end{singlespace}
 \end{flushleft}
-\subsubsection{Vector Clock Algorithmus}\label{vector_algorithm}
 \subsubsection{Vector Clock pro Thread}
 \begin{flushleft}
 Die Vector Clock eignet sich optimal for die History des Dynamic Parallel Checkers. Jeder Thread erhält seine eigene Vektor Clock, in der er die Zeitstempel der anderen Threads mitführt. Es wird nicht der aktuelle Zeitstempel mitgeführt, sondern der Zeitstempel der bei der letzten direkten oder indirekten Synchronisation mit diesem Thread von diesem Thread mitgeliefert wurde. Bei einem Synchronisationspunkt wird die Vector Clock mit der Vector Clock aus der Lock-History synchronisiert. (sh. \ref{lock_history}) Die Reihenfolge der Synchronisation ist jedoch nicht deterministisch und hängt vom Scheduler ab.\\
@@ -342,14 +342,14 @@ Die neue Vektor Clock von T3 lässt sich nun wie folgt bilden:
 \end{itemize}
 Nach der Synchronisation ist eine Barriere aufgebaut. Kein Ereignis von T3 kann nach der Synchronisation mit einem Ereignis von T1 vor der Synchronisation in Konflikt stehen.
 \end{flushleft}
-\subsubsection{Funktion}
+\subsubsection{Vector Clock Algorithmus}\label{vector_algorithm}
 \textbf{Vector Clock Management Algorithmus}
 \begin{flushleft}
 
 \end{flushleft}
 \textbf{Algorithmus Beispiel}
 \begin{flushleft}
-Wir werden nun den Beispiel Code durchspielen und dabei die Lock-History befüllen:\\
+TODO: Wir werden nun den Beispiel Code durchspielen und dabei die Lock-History befüllen:\\
 \begin{itemize}
 \item Wenn alle Threads gestartet sind.\\[0.3cm]
 \begin{tabular}{ c c c }
@@ -426,7 +426,13 @@ IL_0030:  stsfld     object TestProgram.Program::_a
 \autoref{example_instrumentedCode} zeigt den Code nach dem der Dynamic Parallel Checker diesen instrumentiert hat. Wie in \autoref{example_codeWithoutInstrum}, startet der Code mit "box" und endet mit "stsfld". Dazwischen wurde der Code um den Dynamic Parallel Checker erweitert. Um zu wissen auf welche Variable der Schreibzugriff durchgeführt wird, wird mit "ldsflda" (Load static Field Address) die Adresse der Resource ausgelesen und auf den Stack gelegt. Danach wird die Zeilennummer des Schreibzugriff auf den Stack gelegt (Man beachte: Die Zeilennummer zeigt die Zeile vor der Instrumentation) um bei einem Fehler aufzuzeigen, welche Code Zeilen diesen verursacht haben. Daher wird auch als nächstes der Methodennamen als String auf den Stack gelegt. Als letzte instrumentierte Zeile werden dann die Informationen an den Dynamic Parallel Checker übergeben. Dies wird mit der Methode "WriteAccess(int32,int32,string)" durchgeführt. Nach dem Instrumentierten Code hat der Stack wieder den gleichen Zustand wie nach dem "Box" Befehl in \autoref{example_codeWithoutInstrum}.
 \end{flushleft}
 \subsection{Schlussfolgerungen}
+TODO
+\subsubsection{Technische Findings}
+TODO
+\subsubsection{Persönliches Fazit}
+TODO
 \subsection{Backlog}
+TODO
 \section{Glossar}
 - Partielle Ordnung\\
 - Totale Ordnung
