@@ -306,10 +306,10 @@ Console.WriteLine(a);
 \end{singlespace}
 \caption{Beispiel für die Erklärung des Algorithmus}\label{basic_example}
 \end{figure}
-Da der Code in \autoref{basic_example} asynchron durchgeführt wird, werden die 3 enstehenden Thread parallel ausgeführt und es kann das Muster aus \autoref{basic_example_parallel} entstehen.
+Da der Code in \autoref{basic_example} asynchron durchgeführt wird, werden die 3 enstehenden Thread parallel ausgeführt. \autoref{basic_example_parallel} zeigt was die einzelnen Threads parallel durchführen. "w( ), r( )" stehen für Write und Read Vorgänge des Threads. Der Buchstabe in der Klammer für die Ressource.
 \begin{figure}[H]
 \centering
-\includegraphics[scale=0.5]{images/VectorCheckingAlgorithm.png}
+\includegraphics[scale=0.4]{images/VectorCheckingAlgorithm.png}
 \caption{Darstellung der parallelen Vorgänge von \autoref{basic_example}}
 \label{basic_example_parallel}
 \end{figure}
