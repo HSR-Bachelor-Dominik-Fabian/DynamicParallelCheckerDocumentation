@@ -366,15 +366,29 @@ Somit stehen alle Zugriffe, von vor der Synchronisation von Thread1, in der Happ
 \end{flushleft}
 \subsubsection{Vector Clock Algorithmus}\label{vector_algorithm}
 \begin{flushleft}
-
-Bei jedem Auftreten eines Ereignisses innerhalb des gesamten Systems wird das folgende Ablaufdiagramm durchlaufen:\\[0,5cm]
+Mit Hilfe der Instrumentierung wird bei jedem Auftreten eines Ereignisses (Lese- oder Schreibzugriff, Lock oder Unlock auf Ressource, Start eines Threads usw.) unsere Dynamic Parallel Checker aufgerufen und anschliessend unser Algorithmus durchlaufen.\\[0.5cm]
+Handelt es sich bei dem Ereignis im einen Lock auf eine Ressource, wird zuerst überprüft, ob in der Lock-History bereits ein Eintrag vorhanden ist, der auf die gleiche Ressource lautet. Ist dies der Fall, findet eine Synchronisation zwischen der Vector Clock des aktuellen Threads und der Vector Clock des Eintrags in der Lock-History statt. Die Synchronisation ist in \ref{lock_history} beschrieben.\\
+\begin{figure}[H]
+	\includegraphics[width=13cm,height=5.5cm,trim=70mm 106mm 80mm 8mm, clip]{images/Lock.pdf}
+\caption{Algorithmus - Lock}\label{algo_lock}
+\end{figure}
+Handelt es sich bei dem Ereignis um einen Unlock auf eine Ressource, wird sichergestellt, dass die aktuelle Vector Clock zu der Ressource in die Lock-History geschrieben wird. Dabei wird überprüft, ob bereits ein Eintrag zu dieser Ressource in der Lock-History vorhanden ist. Wenn ja, wird dieser mit der neuen Zeit und der ThreadId oder TaskId überschrieben. Falls kein Eintrag vorhanden ist wird ein Neuer erstellt. Zudem wird der eigene Wert in der Vector Clock des aktuellen Threads oder Tasks inkrementiert. Dies dient dazu, dass beim nächsten Auftreten eines Locks auf dieselbe Ressource, nach der Synchronisation, die Happened-Before Beziehung gilt. \\
+\begin{figure}[H]
+	\includegraphics[width=15cm,height=5.5cm,trim=70mm 110mm 50mm 5mm, clip]{images/Unlock.pdf}
+\caption{Algorithmus - Unlock}\label{algo_unlock}
+\end{figure}
+Handelt es sich bei dem Ereignis um einen Lese- oder Schreibzugriff auf eine Ressource, wird 
+\begin{figure}[H]
+	\includegraphics[width=15cm,height=5.5cm,trim=70mm 108mm 50mm 7mm, clip]{images/ReadWrite.pdf}
+\caption{Algorithmus - Read/Write}\label{algo_unlock}
+\end{figure}
 Zu Beginn wird geprüft ob es sich bei dem Ereignis um ein Lock-Ereignis handelt. Ist dies der Fall muss geprüft werden ob zu der Ressource im Ereignis ein Eintrag in der Lock-History vorhanden ist. Wenn ein solcher Eintrag vorhanden ist muss die Vector Clock des jetzigen Threads mit dem Eintrag in der History synchronisiert werden.\\
 Als nächstes wird geprüft ob es sich um ein Unlock-Ereignis handelt. Wenn ja muss ein neuer Eintrag in die Lock-History gemacht werden. Dabei muss geprüft werden ob bereits einer vorhanden ist, dann muss dieser überschrieben werden. Zudem muss anschliessend der eigene Wert in der Vector Clock inkrementiert werden.\\
 Jedes Ereignis muss anschliessend in die Program-History geschrieben werden. Denn mit Hilfe dieser History wird im nächsten Schritt überprüft ob irgendwelche Race Conditions vorliegen.
 \end{flushleft}
 \textbf{Algorithmus Beispiel}
 \begin{flushleft}
-TODO: Wir werden nun den Beispiel Code durchspielen und dabei die Lock-History befüllen:\\
+In diesem Kapitel wird der Algorithmus auf das Beispielprogramm  in \autoref{basic_example} angewendet.\\
 \begin{itemize}
 \item Wenn alle Threads gestartet sind.\\[0.3cm]
 \begin{tabular}{ c c c }
