@@ -318,29 +318,28 @@ Unser Algorithmus verwendet die Vector Clock des aktuellen Threads um diese mit 
 \begin{flushleft}
 Während der kompletten Überwachung wird eine Lock-History geführt. Diese beinhaltet die Information welcher Thread auf welche Ressource zu welcher Zeit (Vector Clock) einen Lock durchgeführt hat. Diese Information wird benötigt um z.B. eine Synchronisation zwischen dem Thread, der den letzten Unlock auf eine Ressource durchgeführt hat, mit dem aktuellen Thread, der nun einen Lock auf die selbe Ressource durchführen möchte, vorzunehmen. Bei jedem Unlock wird ein neuer Lock-History Eintrag erstellt, falls noch keiner vorhanden ist. Sollte jedoch bereits einer vorhanden sein, wird dieser überschrieben. Eine Lock-History könnte wie folgt aussehen:\\
 \end{flushleft}
+\begin{figure}[H]
 \begin{center}
 \textbf{\textit{Lock-History:}}\\[0.5cm]
 \begin{tabular}{ c c c }
   Vektor & Ressource & ThreadNr \\\hline
-  (1,1,0) & locka & 2 \\
-  (1,0,0) & lockb & 1 \\\hline\\
+  (2,1,0) & locka & 1 \\
+  (1,0,0) & lockb & 2 \\\hline\\
 \end{tabular}
+\caption{Beispiel Lock-History}\label{example_lockHistory}
 \end{center}
-\textbf{Synchronisation der Vektor Clock}
+\end{figure}
+\textbf{Synchronisation der Vector Clock}
 \begin{flushleft}
-Wenn z.B. in unserem Beispielprogramm Thread1 (T1) vor Thread3 (T3) in den Lock(a) Bereich kommt, schreibt er beim Verlassen des gesicherten Bereichs einen Eintrag in die Lock-History. Wenn nun T3 de Lock(a) beziehen möchte, sieht der Algorithmus zuerst in die Lock-History ud synchronisiert seine Vector Clock ()
-
-TODO: Beispiel umschreiben\\
-Wenn z.B. in unserem Beispielprogramm Thread1(T1) vor Thread3(T3) in den lock(a) Bereich kommt, schreibt er beim Verlassen des gesicherten Bereichs einen Eintrag in die Lock-History. Wenn nun T3 den lock von a beziehen möchte schaut er zuerst in die Lock-History und synchronisiert seine Vektor Clock (a1,a2,a3) mit der Vektor Clock des Eintrags in der Tabelle (b1,b2,b3).\\
-Die neue Vektor Clock von T3 lässt sich nun wie folgt bilden: 
-\begin{center}(b1, max(a2, b2), a3 + 1)\end{center}
-\textit{Erklärung:}
+Wenn z.B. im Beispielprogramm Thread1 (T1) vor Thread3 (T3) in den Lock(a) Bereich kommt, schreibt er beim Verlassen des gesicherten Bereichs einen Eintrag in die Lock-History. Wenn nun T3 den Lock(a) beziehen möchte, prüft der Algorithmus zuerst, ob ein Eintrag in der Lock-History vorhanden ist. Ist die der Fall, wird die eigene Vector Cock (a3, b3, c3) mit der Vector Clock des History Eintrags (a1, b1, c1) synchronisiert.\\
+Die neue Vector Clock von T3 setzt sich folgendermassen zusammen:
+\begin{center}(MAX(a1, a3), MAX(b1, b3), MAX(c1, c3) + 1)\end{center}
+\textit{Synchronisation:}
 \begin{itemize}
-\item Von dem Thread, dessen Eintrag in der Lock-History zu einer Synchronisation führte, kann direkt der Wert übernommen werden.
-\item Der synchronisierende Thread kann den eigenen Wert übernehmen und die Zahl 1 addieren.
-\item Von jedem Thread der nicht in die Synchronisation involviert ist kann max(a, b) genommen werden.
+\item Bei jeder ThreadId oder TaskId, die in den beiden Vector Clock vorkommt, wird der grössere Wert aus beiden Vector Clocks verwendet. z.B. MAX(a1, a2)
+\item Die synchronisierende Vector Clock inkrementiert den Wert der eigenen ThreadId oder TaskId. z.B. MAX(c1, c3) + 1
 \end{itemize}
-Nach der Synchronisation ist eine Barriere aufgebaut. Kein Ereignis von T3 kann nach der Synchronisation mit einem Ereignis von T1 vor der Synchronisation in Konflikt stehen.
+Somit stehen alle Zugriffe, von vor der Synchronisation von Thread1, in der Happened-Before Beziehung mit allen Zugriffen von Thread3 nach der Synchronisation. Somit können diese Zugriffe keine Race Condition darstellen.
 \end{flushleft}
 \subsubsection{Vector Clock Algorithmus}\label{vector_algorithm}
 \textbf{Vector Clock Management Algorithmus}
