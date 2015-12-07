@@ -262,24 +262,20 @@ Um erfolgreich den Source Code für den Dynamic Parallel Checker zu instrumentie
 \caption{Beispiel Code Injection, Stack verhalten}
 \label{example_injection}
 \end{figure}
-In \autoref{example_injection} ist ein Beispiel dargestellt, wie eine Injection den Stack verwaltet und dabei die benötigte Information "obj" aus dem Stack extrahiert und den Ursprungszustand wiederherstellt. Da bei einem LIFO Stack nur auf das oberste Element zugegriffen werden kann, wird der Top-Wert "value" in eine lokale Variable gespeichert. Nach dem Abbau des duplizieren "obj" wird der Wert wieder aus der Variable auf den Stack gelegt.\\
-TODO:
-- IL Erklärung\\
-- Operation Codes\\
--Instrumentation erklären
-\\
+In \autoref{example_injection} ist ein Beispiel dargestellt, wie eine Injection den Stack verwaltet und dabei die benötigte Information "obj" aus dem Stack extrahiert und den Ursprungszustand wiederherstellt. Da bei einem LIFO Stack nur auf das oberste Element zugegriffen werden kann, wird der Top-Wert "value" in eine lokale Variable gespeichert. Nach dem Abbau des duplizieren "obj" wird der Wert wieder aus der Variable auf den Stack gelegt.
 \end{flushleft}
-\newpage
 \subsection{Implementation}\label{implementation}
 In diesem Kapitel wird die Implementation des Dynamic Prallel Checker genauer erklärt. Unter \ref{example} ist das Beispiel beschrieben an welchem, in den folgenden Kapitel, die Funktion des Dynamic Parallel Checkers beschrieben wird. Der Dynamic Parallel Checker wurde mit C\#.Net entwickelt.
+\newpage
 \subsubsection{Beispiel}\label{example}
 \begin{flushleft}
 Der Vektor Clock Algorithmus wird in diesem Kapitel mit Hilfe von folgendem Pseudo-Code Beispiel genauer erläutert.\\
+\begin{figure}[H]
 \begin{singlespace}
 \begin{lstlisting}
 //... Deklaration a,b,locka,lockb...
 
-Task.Start(() =>		// start thread2 (T2)
+Thread.Start(() =>		// start thread2 (T2)
 {
 	lock(lockb) {
 		b = 3;
@@ -289,7 +285,7 @@ Task.Start(() =>		// start thread2 (T2)
 		Console.WriteLine(a);
 	}
 });
-Task.Start(() =>		// start thread3 (T3)
+Thread.Start(() =>		// start thread3 (T3)
 {
 	lock(locka) {
 		a = 2;
@@ -308,7 +304,17 @@ lock(lockb) {
 Console.WriteLine(a);
 \end{lstlisting}
 \end{singlespace}
+\caption{Beispiel für die Erklärung des Algorithmus}\label{basic_example}
+\end{figure}
+Da der Code in \autoref{basic_example} asynchron durchgeführt wird, werden die 3 enstehenden Thread parallel ausgeführt und es kann das Muster aus \autoref{basic_example_parallel} entstehen.
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.5]{images/VectorCheckingAlgorithm.png}
+\caption{Darstellung der parallelen Vorgänge von \autoref{basic_example}}
+\label{basic_example_parallel}
+\end{figure}
 \end{flushleft}
+\newpage
 \subsubsection{Vector Clock pro Thread}
 \begin{flushleft}
 Die Vector Clock eignet sich optimal for die History des Dynamic Parallel Checkers. Jeder Thread erhält seine eigene Vektor Clock, in der er die Zeitstempel der anderen Threads mitführt. Es wird nicht der aktuelle Zeitstempel mitgeführt, sondern der Zeitstempel der bei der letzten direkten oder indirekten Synchronisation mit diesem Thread von diesem Thread mitgeliefert wurde. Bei einem Synchronisationspunkt wird die Vector Clock mit der Vector Clock aus der Lock-History synchronisiert. (sh. \ref{lock_history}) Die Reihenfolge der Synchronisation ist jedoch nicht deterministisch und hängt vom Scheduler ab.\\
@@ -427,7 +433,8 @@ IL_0030:  stsfld     object TestProgram.Program::_a
 \subsection{Schlussfolgerungen}
 TODO
 \subsubsection{Technische Findings}
-TODO
+TODO\\
+-Task/Threads
 \subsubsection{Persönliches Fazit}
 TODO
 \subsection{Backlog}
