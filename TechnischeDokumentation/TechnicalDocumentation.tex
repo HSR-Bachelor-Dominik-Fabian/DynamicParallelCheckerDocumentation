@@ -18,6 +18,7 @@
 \usepackage[T1]{fontenc}
 \usepackage{amsmath}
 \usepackage{float}
+\usepackage{colortbl}
 
 \renewcommand*{\familydefault}{\sfdefault}
 \geometry{verbose,a4paper,tmargin=35mm,bmargin=35mm,lmargin=25mm,rmargin=25mm}
@@ -395,19 +396,22 @@ Somit stehen alle Zugriffe, von vor der Synchronisation von Thread1, in der Happ
 Mit Hilfe der Instrumentierung wird bei jedem Auftreten eines Ereignisses (Lese- oder Schreibzugriff, Lock oder Unlock auf Ressource, Start eines Threads usw.) unsere Dynamic Parallel Checker Library aufgerufen und anschliessend unser Algorithmus durchlaufen.\\[0.3cm]
 Handelt es sich bei dem Ereignis im einen Lock auf eine Ressource, wird das Ablaufdiagramm in \autoref{algo_lock} durchlaufen. Zuerst wird überprüft, ob in der Lock-History bereits ein Eintrag vorhanden ist, der auf die gleiche Ressource lautet. Ist dies der Fall, findet eine Synchronisation zwischen der Vector Clock des aktuellen Threads und der Vector Clock des Eintrags in der Lock-History statt. Die Synchronisation ist in \ref{lock_history} beschrieben.\\
 \begin{figure}[H]
-	\includegraphics[width=13cm,height=5.5cm,trim=70mm 106mm 80mm 8mm, clip]{images/Lock.pdf}
+\centering
+	\includegraphics[width=14cm,height=5.5cm,trim=70mm 110mm 70mm 5mm, clip]{images/Lock.pdf}
 \caption{Algorithmus - Lock}\label{algo_lock}
 \end{figure}
 Handelt es sich bei dem Ereignis um einen Unlock auf eine Ressource, wird das Ablaufdiagramm in \autoref{algo_unlock} durchlaufen. Es wird sichergestellt, dass die aktuelle Vector Clock zu der Ressource in die Lock-History geschrieben wird. Dabei wird überprüft, ob bereits ein Eintrag zu dieser Ressource in der Lock-History vorhanden ist. Wenn ja, wird dieser mit der neuen Zeit und der ThreadId oder TaskId überschrieben. Falls kein Eintrag vorhanden ist wird ein Neuer erstellt. Zudem wird der eigene Wert in der Vector Clock des aktuellen Threads oder Tasks inkrementiert. Dies dient dazu, dass beim nächsten Auftreten eines Locks auf dieselbe Ressource, nach der Synchronisation, die Happened-Before Beziehung gilt. \\
 \begin{figure}[H]
-	\includegraphics[width=15cm,height=5.5cm,trim=70mm 110mm 50mm 5mm, clip]{images/Unlock.pdf}
+\centering
+	\includegraphics[width=12cm,height=5.5cm,trim=70mm 106mm 100mm 8mm, clip]{images/Unlock.pdf}
 \caption{Algorithmus - Unlock}\label{algo_unlock}
 \end{figure}
 Handelt es sich bei dem Ereignis um einen Lese- oder Schreibzugriff auf eine Ressource, wird das Ablaufdiagramm in \autoref{algo_readwrite} durchlaufen. Zuerst wird das Ereignis in die Program-History des aktuellen Threads oder Tasks abgelegt. Sollte während der selben Vector Clock Zeit, im aktuellen Thread, bereits ein Zugriff auf diese Ressource stattgefunden haben, wird der Zugriffstyp (Read oder Write) aktualisiert. Solange nur Lesezugriffe stattgefunden haben ist der Zugriffstyp immer "Read". Sobald jedoch ein Schreibzugriff stattgefunden hat wird dieser Typ auf "Write" geändert und wird nie mehr den Type "Read" erhalten. Dadurch wurde die Datenstruktur optimiert.\\
 Anschliessend wird das aktuelle Ereignis auf Race Conditions geprüft. Dafür benötigt unser Algorithmus alle Zugriffe, von den anderen Threads oder Tasks, die neben läufig zu dem aktuellen Zugriff aufgetreten sind. Dies kann mit Hilfe der Happened-Before Beziehung überprüft werden. In einem dynamischen Checker hat das Scheduling einen grossen Einfluss auf die Reihenfolge der einzelnen Zugriffe und kann dadurch die Happened-Before Beziehungen zwischen zwei Zugriffen ändern.\\
 Hat einer dieser neben läufigen Zugriffe auf die selbe Ressource zugegriffen, wird überprüft ob es sich dabei um eine Race Condition handelt. Mehr Informationen zu Race Conditions in Kapitel \ref{race_conditons}. Sollte eine Race Condition erkannt werden, wird diese mit Hilfe des Logging Frameworks NLog an die WPF Applikation gemeldet und dem Benutzer angezeigt.
 \begin{figure}[H]
-	\includegraphics[width=15cm,height=5.5cm,trim=70mm 108mm 50mm 7mm, clip]{images/ReadWrite.pdf}
+\centering
+	\includegraphics[width=5cm,height=5.5cm,trim=70mm 108mm 200mm 7mm, clip]{images/ReadWrite.pdf}
 \caption{Algorithmus - Read/Write}\label{algo_readwrite}
 \end{figure}
 \end{flushleft}
@@ -463,8 +467,8 @@ In diesem Kapitel wird der Algorithmus auf das Beispielprogramm  in \autoref{bas
 \end{tabular}\hspace*{0.5cm}
 \begin{tabular}{ c c c c }
   	ThreadNr & Ressource & Vektor & ZugriffsTyp \\\hline
-  	1 & a & (1,0,0) & write \\
-  	2 & b & (0,1,0) & write \\\hline
+  	2 & b & (0,1,0) & write \\
+  	1 & a & (1,0,0) & write \\\hline
 \end{tabular}
 \[
 	T1 = \begin{pmatrix}
@@ -477,21 +481,21 @@ In diesem Kapitel wird der Algorithmus auf das Beispielprogramm  in \autoref{bas
 		T3 & 1\\
 	\end{pmatrix}
 \]\newpage
-\item \textit{lock(locka), w(a), unlock(locka) von Thread3}\\[0.3cm]
+\item \textit{lock(locka), w(a), unlock(locka) von Thread3. Keine Race Condition, weil Happened Before Beziehung zwischen beiden Schreibzugriffen auf Ressource a.}\\[0.3cm]
 \begin{tabular}{ c c c }
   	Vektor & Ressource & ThreadNr \\\hline
-  	(1,2,0) & locka & 3 \\
+  	(1,0,2) & locka & 3 \\
   	(0,1,0) & lockb & 2 \\\hline
 \end{tabular}\hspace*{0.5cm}
 \begin{tabular}{ c c c c }
   	ThreadNr & Ressource & Vektor & ZugriffsTyp \\\hline
-  	1 & a & (1,0,0) & write \\
   	2 & b & (0,1,0) & write \\
-  	3 & a & (1,2,0) & write \\\hline
+  	\color{ForestGreen}1 & \color{ForestGreen}a & \color{ForestGreen}(1,0,0) & \color{ForestGreen}write \\
+  	\color{ForestGreen}3 & \color{ForestGreen}a & \color{ForestGreen}(1,0,2) & \color{ForestGreen}write \\\hline
 \end{tabular}
 \[
 	T1 = \begin{pmatrix}
-		T1 & 1\\
+		T1 & 2\\
 	\end{pmatrix}
 	, T2 = \begin{pmatrix}
 		T2 & 2\\
@@ -501,9 +505,184 @@ In diesem Kapitel wird der Algorithmus auf das Beispielprogramm  in \autoref{bas
 		T3 & 3\\
 	\end{pmatrix}
 \]
-TODO: Beispiel fertigstellen\\
+\item \textit{w(b) von Thread2}\\[0.3cm]
+\begin{tabular}{ c c c }
+  	Vektor & Ressource & ThreadNr \\\hline
+  	(1,0,2) & locka & 3 \\
+  	(0,1,0) & lockb & 2 \\\hline
+\end{tabular}\hspace*{0.5cm}
+\begin{tabular}{ c c c c }
+  	ThreadNr & Ressource & Vektor & ZugriffsTyp \\\hline
+  	2 & b & (0,1,0) & write \\
+  	1 & a & (1,0,0) & write \\
+  	3 & a & (1,0,2) & write \\
+  	2 & b & (0,2,0) & write \\\hline
+\end{tabular}
+\[
+	T1 = \begin{pmatrix}
+		T1 & 2\\
+	\end{pmatrix}
+	, T2 = \begin{pmatrix}
+		T2 & 2\\
+	\end{pmatrix}
+	, T3 = \begin{pmatrix}
+		T1 & 1\\		
+		T3 & 3\\
+	\end{pmatrix}
+\]
+\item \textit{w(b) von Thread3. Eine Race Condition ist aufgetreten.}\\[0.3cm]
+\begin{tabular}{ c c c }
+  	Vektor & Ressource & ThreadNr \\\hline
+  	(1,0,2) & locka & 3 \\
+  	(0,1,0) & lockb & 2 \\\hline
+\end{tabular}\hspace*{0.5cm}
+\begin{tabular}{ c c c c }
+  	ThreadNr & Ressource & Vektor & ZugriffsTyp \\\hline
+  	2 & b & (0,1,0) & write \\
+  	1 & a & (1,0,0) & write \\
+  	3 & a & (1,0,2) & write \\
+  	\color{red}2 & \color{red}b & \color{red}(0,2,0) & \color{red}write\\
+  	\color{red}3 & \color{red}b & \color{red}(1,0,3) & \color{red}write \\\hline
+\end{tabular}
+\[
+	T1 = \begin{pmatrix}
+		T1 & 2\\
+	\end{pmatrix}
+	, T2 = \begin{pmatrix}
+		T2 & 2\\
+	\end{pmatrix}
+	, T3 = \begin{pmatrix}
+		T1 & 1\\		
+		T3 & 3\\
+	\end{pmatrix}
+\]
+\item \textit{lock(lockb), w(b), unlock(lockb) von Thread1. Zwei Race Conditions sind aufgetreten.}\\[0.3cm]
+\begin{tabular}{ c c c }
+  	Vektor & Ressource & ThreadNr \\\hline
+  	(1,0,2) & locka & 3 \\
+  	(3,1,0) & lockb & 1 \\\hline
+\end{tabular}\hspace*{0.5cm}
+\begin{tabular}{ c c c c }
+  	ThreadNr & Ressource & Vektor & ZugriffsTyp \\\hline
+  	2 & b & (0,1,0) & write \\
+  	1 & a & (1,0,0) & write \\
+  	3 & a & (1,0,2) & write \\
+  	\color{red}2 & \color{red}b & \color{red}(0,2,0) & \color{red}write\\
+  	\color{red}3 & \color{red}b & \color{red}(1,0,3) & \color{red}write \\
+  	\color{red}1 & \color{red}b & \color{red}(3,1,0) & \color{red}write \\\hline
+\end{tabular}
+\[
+	T1 = \begin{pmatrix}
+		T1 & 4\\
+		T2 & 1\\
+	\end{pmatrix}
+	, T2 = \begin{pmatrix}
+		T2 & 2\\
+	\end{pmatrix}
+	, T3 = \begin{pmatrix}
+		T1 & 1\\		
+		T3 & 3\\
+	\end{pmatrix}
+\]
+\item \textit{lock(locka), r(a), unlock(locka) von Thread2. Eine Race Condition ist aufgetreten.}\\[0.2cm]
+\begin{tabular}{ c c c }
+  	Vektor & Ressource & ThreadNr \\\hline
+  	(1,3,2) & locka & 2 \\
+  	(3,1,0) & lockb & 1 \\\hline
+\end{tabular}\hspace*{0.5cm}
+\begin{tabular}{ c c c c }
+  	ThreadNr & Ressource & Vektor & ZugriffsTyp \\\hline
+  	2 & b & (0,1,0) & write \\
+  	1 & a & (1,0,0) & write \\
+  	\color{red}3 & \color{red}a & \color{red}(1,0,2) & \color{red}write \\
+  	2 & b & (0,2,0) & write\\
+  	3 & b & (1,0,3) & write \\
+  	1 & b & (3,1,0) & write \\
+  	\color{red}2 & \color{red}a & \color{red}(1,3,2) & \color{red}read \\\hline
+\end{tabular}
+\[
+	T1 = \begin{pmatrix}
+		T1 & 4\\
+		T2 & 1\\
+	\end{pmatrix}
+	, T2 = \begin{pmatrix}
+		T1 & 1\\		
+		T2 & 4\\
+		T3 & 2\\
+	\end{pmatrix}
+	, T3 = \begin{pmatrix}
+		T1 & 1\\		
+		T3 & 3\\
+	\end{pmatrix}
+\]
+\item \textit{lock(lockb), r(b), unlock(lockb) von Thread3. Eine Race Condition ist aufgetreten.}\\[0.2cm]
+\begin{tabular}{ c c c }
+  	Vektor & Ressource & ThreadNr \\\hline
+  	(1,3,2) & locka & 2 \\
+  	(3,1,4) & lockb & 3 \\\hline
+\end{tabular}\hspace*{0.5cm}
+\begin{tabular}{ c c c c }
+  	ThreadNr & Ressource & Vektor & ZugriffsTyp \\\hline
+  	2 & b & (0,1,0) & write \\
+  	1 & a & (1,0,0) & write \\
+  	3 & a & (1,0,2) & write \\
+  	\color{red}2 & \color{red}b & \color{red}(0,2,0) & \color{red}write\\
+  	3 & b & (1,0,3) & write \\
+  	1 & b & (3,1,0) & write \\
+  	2 & a & (1,3,2) & read \\
+  	\color{red}3 & \color{red}b & \color{red}(3,1,4) & \color{red}read \\\hline
+\end{tabular}
+\[
+	T1 = \begin{pmatrix}
+		T1 & 4\\
+		T2 & 1\\
+	\end{pmatrix}
+	, T2 = \begin{pmatrix}
+		T1 & 1\\		
+		T2 & 4\\
+		T3 & 2\\
+	\end{pmatrix}
+	, T3 = \begin{pmatrix}
+		T1 & 3\\
+		T2 & 1\\		
+		T3 & 5\\
+	\end{pmatrix}
+\]
+\item \textit{r(a) von Thread1. Eine Race Condition ist aufgetreten.}\\[0.2cm]
+\begin{tabular}[font=small]{ c c c }
+  	Vektor & Ressource & ThreadNr \\\hline
+  	(1,3,2) & locka & 2 \\
+  	(3,1,4) & lockb & 3 \\\hline
+\end{tabular}\hspace*{0.5cm}
+\begin{tabular}{ c c c c }
+  	ThreadNr & Ressource & Vektor & ZugriffsTyp \\\hline
+  	2 & b & (0,1,0) & write \\
+  	1 & a & (1,0,0) & write \\
+  	\color{red}3 & \color{red}a & \color{red}(1,0,2) & \color{red}write \\
+  	... & ... & ... & ... \\
+  	2 & a & (1,3,2) & read \\
+  	3 & b & (3,1,4) & read \\
+  	\color{red}1 & \color{red}a & \color{red}(4,1,0) & \color{red}read \\\hline
+\end{tabular}
+\[
+	T1 = \begin{pmatrix}
+		T1 & 4\\
+		T2 & 1\\
+	\end{pmatrix}
+	, T2 = \begin{pmatrix}
+		T1 & 1\\		
+		T2 & 4\\
+		T3 & 2\\
+	\end{pmatrix}
+	, T3 = \begin{pmatrix}
+		T1 & 3\\
+		T2 & 1\\		
+		T3 & 5\\
+	\end{pmatrix}
+\]
 \end{itemize}
 \end{flushleft}
+\newpage
 \subsection{Schlussfolgerungen}
 TODO
 \subsubsection{Technische Findings}
