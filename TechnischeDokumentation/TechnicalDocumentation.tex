@@ -7,7 +7,7 @@
 \usepackage{fancyhdr}
 \usepackage{graphicx}
 \usepackage[german]{babel}
-\renewcommand{\listfigurename}{Test}
+\renewcommand{\listfigurename}{}
 \usepackage{geometry}
 \usepackage{listings}
 \usepackage{hyperref}
@@ -315,6 +315,35 @@ Da der Code in \autoref{basic_example} asynchron durchgeführt wird, werden die 
 \end{figure}
 \end{flushleft}
 \newpage
+\subsubsection{Instrumentation}
+\begin{flushleft}
+Für die Durchführung des Vector Clock Algorithmus (sh. Kapitel \ref{vector_algorithm}) ist es wichtig die Informationen über Lese- / Schreibzugriffe sowie Locks und Thread.Starts zu erhalten. Dazu muss der bestehende IL Code angepasst (instrumentiert) werden, damit er diese Informationen preisgibt. Dazu wird der Code analysiert und an Stellen mit wichtigen Zugriffen um Code erweitert. Wie in Kapitel \ref{chapter_IL} bereits beschrieben muss dabei der korrekte Aufbau des Stack jederzeit sichergestellt werden. Für die Instrumentation des Codes wird die Library Mono.Cecil aus dem Mono Projekt verwendet. Die Library erlaubt es den IL Code zu lesen und zu bearbeiten. 
+\begin{figure}[H]
+\centering
+\begin{lstlisting}[language=CIL,backgroundcolor=\color{backcolor}]
+IL_001a:  box        [mscorlib]System.Int32
+IL_001f:  stsfld     object TestProgram.Program::_a
+\end{lstlisting}
+\caption{Beispiel ohne Instrumentation}\label{example_codeWithoutInstrum}
+\end{figure}
+\autoref{example_codeWithoutInstrum} zeigt ein Beispiel, eines typischen Schreibzugriff im MS IL. Der Befehl "box" führt ein Boxing eines Integers durch. Dabei wird der Integerwert von einem Valuetype zu einem Referenztyp umgebaut. Auf dem Stack liegt nach dem Boxing die Adresse des Integer-Werts. Diese Adresse wird dann verwendet um den Wert in die Variable "\_a" mit dem Befehl "stsfld"(Store Static Field) zu speichern.\\
+\begin{figure}[H]
+\centering
+\begin{lstlisting}[language=CIL,backgroundcolor=\color{backcolor}]
+IL_001a:  box        [mscorlib]System.Int32
+//----------Instrumented Code...----------------
+IL_001f:  ldsflda    object TestProgram.Program::_a
+IL_0024:  ldc.i4.s   31
+IL_0026:  ldstr      "System.Void TestProgram.Program::Test()"
+IL_002b:  call       void [DPCLibrary]DPCLibrary.DpcLibrary::
+                                 WriteAccess(int32,int32,string)
+//----------...End Instrumentation--------------
+IL_0030:  stsfld     object TestProgram.Program::_a
+\end{lstlisting}
+\caption{Instrumentierter IL Code}\label{example_instrumentedCode}
+\end{figure}
+\autoref{example_instrumentedCode} zeigt den Code nach dem der Dynamic Parallel Checker diesen instrumentiert hat. Wie in \autoref{example_codeWithoutInstrum}, startet der Code mit "box" und endet mit "stsfld". Dazwischen wurde der Code um den Dynamic Parallel Checker erweitert. Um zu wissen auf welche Variable der Schreibzugriff durchgeführt wird, wird mit "ldsflda" (Load static Field Address) die Adresse der Resource ausgelesen und auf den Stack gelegt. Danach wird die Zeilennummer des Schreibzugriff auf den Stack gelegt (Man beachte: Die Zeilennummer zeigt die Zeile vor der Instrumentation) um bei einem Fehler aufzuzeigen, welche Code Zeilen diesen verursacht haben. Daher wird auch als nächstes der Methodennamen als String auf den Stack gelegt. Als letzte instrumentierte Zeile werden dann die Informationen an den Dynamic Parallel Checker übergeben. Dies wird mit der Methode "WriteAccess(int32,int32,string)" durchgeführt. Nach dem Instrumentierten Code hat der Stack wieder den gleichen Zustand wie nach dem "Box" Befehl in \autoref{example_codeWithoutInstrum}.
+\end{flushleft}
 \subsubsection{Vector Clock pro Thread}
 \begin{flushleft}
 Die Vector Clock eignet sich optimal for die History des Dynamic Parallel Checkers. Jeder Thread erhält seine eigene Vektor Clock, in der er die Zeitstempel der anderen Threads mitführt. Es wird nicht der aktuelle Zeitstempel mitgeführt, sondern der Zeitstempel der bei der letzten direkten oder indirekten Synchronisation mit diesem Thread von diesem Thread mitgeliefert wurde. Bei einem Synchronisationspunkt wird die Vector Clock mit der Vector Clock aus der Lock-History synchronisiert. (sh. \ref{lock_history}) Die Reihenfolge der Synchronisation ist jedoch nicht deterministisch und hängt vom Scheduler ab.\\
@@ -366,34 +395,37 @@ Somit stehen alle Zugriffe, von vor der Synchronisation von Thread1, in der Happ
 \end{flushleft}
 \subsubsection{Vector Clock Algorithmus}\label{vector_algorithm}
 \begin{flushleft}
-Mit Hilfe der Instrumentierung wird bei jedem Auftreten eines Ereignisses (Lese- oder Schreibzugriff, Lock oder Unlock auf Ressource, Start eines Threads usw.) unsere Dynamic Parallel Checker aufgerufen und anschliessend unser Algorithmus durchlaufen.\\[0.5cm]
-Handelt es sich bei dem Ereignis im einen Lock auf eine Ressource, wird zuerst überprüft, ob in der Lock-History bereits ein Eintrag vorhanden ist, der auf die gleiche Ressource lautet. Ist dies der Fall, findet eine Synchronisation zwischen der Vector Clock des aktuellen Threads und der Vector Clock des Eintrags in der Lock-History statt. Die Synchronisation ist in \ref{lock_history} beschrieben.\\
+Mit Hilfe der Instrumentierung wird bei jedem Auftreten eines Ereignisses (Lese- oder Schreibzugriff, Lock oder Unlock auf Ressource, Start eines Threads usw.) unsere Dynamic Parallel Checker Library aufgerufen und anschliessend unser Algorithmus durchlaufen.\\[0.3cm]
+Handelt es sich bei dem Ereignis im einen Lock auf eine Ressource, wird das Ablaufdiagramm in \autoref{algo_lock} durchlaufen. Zuerst wird überprüft, ob in der Lock-History bereits ein Eintrag vorhanden ist, der auf die gleiche Ressource lautet. Ist dies der Fall, findet eine Synchronisation zwischen der Vector Clock des aktuellen Threads und der Vector Clock des Eintrags in der Lock-History statt. Die Synchronisation ist in \ref{lock_history} beschrieben.\\
 \begin{figure}[H]
 	\includegraphics[width=13cm,height=5.5cm,trim=70mm 106mm 80mm 8mm, clip]{images/Lock.pdf}
 \caption{Algorithmus - Lock}\label{algo_lock}
 \end{figure}
-Handelt es sich bei dem Ereignis um einen Unlock auf eine Ressource, wird sichergestellt, dass die aktuelle Vector Clock zu der Ressource in die Lock-History geschrieben wird. Dabei wird überprüft, ob bereits ein Eintrag zu dieser Ressource in der Lock-History vorhanden ist. Wenn ja, wird dieser mit der neuen Zeit und der ThreadId oder TaskId überschrieben. Falls kein Eintrag vorhanden ist wird ein Neuer erstellt. Zudem wird der eigene Wert in der Vector Clock des aktuellen Threads oder Tasks inkrementiert. Dies dient dazu, dass beim nächsten Auftreten eines Locks auf dieselbe Ressource, nach der Synchronisation, die Happened-Before Beziehung gilt. \\
+Handelt es sich bei dem Ereignis um einen Unlock auf eine Ressource, wird das Ablaufdiagramm in \autoref{algo_unlock} durchlaufen. Es wird sichergestellt, dass die aktuelle Vector Clock zu der Ressource in die Lock-History geschrieben wird. Dabei wird überprüft, ob bereits ein Eintrag zu dieser Ressource in der Lock-History vorhanden ist. Wenn ja, wird dieser mit der neuen Zeit und der ThreadId oder TaskId überschrieben. Falls kein Eintrag vorhanden ist wird ein Neuer erstellt. Zudem wird der eigene Wert in der Vector Clock des aktuellen Threads oder Tasks inkrementiert. Dies dient dazu, dass beim nächsten Auftreten eines Locks auf dieselbe Ressource, nach der Synchronisation, die Happened-Before Beziehung gilt. \\
 \begin{figure}[H]
 	\includegraphics[width=15cm,height=5.5cm,trim=70mm 110mm 50mm 5mm, clip]{images/Unlock.pdf}
 \caption{Algorithmus - Unlock}\label{algo_unlock}
 \end{figure}
-Handelt es sich bei dem Ereignis um einen Lese- oder Schreibzugriff auf eine Ressource, wird 
+Handelt es sich bei dem Ereignis um einen Lese- oder Schreibzugriff auf eine Ressource, wird das Ablaufdiagramm in \autoref{algo_readwrite} durchlaufen. Zuerst wird das Ereignis in die Program-History des aktuellen Threads oder Tasks abgelegt. Sollte während der selben Vector Clock Zeit, im aktuellen Thread, bereits ein Zugriff auf diese Ressource stattgefunden haben, wird der Zugriffstyp (Read oder Write) aktualisiert. Solange nur Lesezugriffe stattgefunden haben ist der Zugriffstyp immer "Read". Sobald jedoch ein Schreibzugriff stattgefunden hat wird dieser Typ auf "Write" geändert und wird nie mehr den Type "Read" erhalten. Dadurch wurde die Datenstruktur optimiert.\\
+Anschliessend wird das aktuelle Ereignis auf Race Conditions geprüft. Dafür benötigt unser Algorithmus alle Zugriffe, von den anderen Threads oder Tasks, die neben läufig zu dem aktuellen Zugriff aufgetreten sind. Dies kann mit Hilfe der Happened-Before Beziehung überprüft werden. In einem dynamischen Checker hat das Scheduling einen grossen Einfluss auf die Reihenfolge der einzelnen Zugriffe und kann dadurch die Happened-Before Beziehungen zwischen zwei Zugriffen ändern.\\
+Hat einer dieser neben läufigen Zugriffe auf die selbe Ressource zugegriffen, wird überprüft ob es sich dabei um eine Race Condition handelt. Mehr Informationen zu Race Conditions in Kapitel \ref{race_conditons}. Sollte eine Race Condition erkannt werden, wird diese mit Hilfe des Logging Frameworks NLog an die WPF Applikation gemeldet und dem Benutzer angezeigt.
 \begin{figure}[H]
 	\includegraphics[width=15cm,height=5.5cm,trim=70mm 108mm 50mm 7mm, clip]{images/ReadWrite.pdf}
-\caption{Algorithmus - Read/Write}\label{algo_unlock}
+\caption{Algorithmus - Read/Write}\label{algo_readwrite}
 \end{figure}
-Zu Beginn wird geprüft ob es sich bei dem Ereignis um ein Lock-Ereignis handelt. Ist dies der Fall muss geprüft werden ob zu der Ressource im Ereignis ein Eintrag in der Lock-History vorhanden ist. Wenn ein solcher Eintrag vorhanden ist muss die Vector Clock des jetzigen Threads mit dem Eintrag in der History synchronisiert werden.\\
-Als nächstes wird geprüft ob es sich um ein Unlock-Ereignis handelt. Wenn ja muss ein neuer Eintrag in die Lock-History gemacht werden. Dabei muss geprüft werden ob bereits einer vorhanden ist, dann muss dieser überschrieben werden. Zudem muss anschliessend der eigene Wert in der Vector Clock inkrementiert werden.\\
-Jedes Ereignis muss anschliessend in die Program-History geschrieben werden. Denn mit Hilfe dieser History wird im nächsten Schritt überprüft ob irgendwelche Race Conditions vorliegen.
 \end{flushleft}
 \textbf{Algorithmus Beispiel}
 \begin{flushleft}
-In diesem Kapitel wird der Algorithmus auf das Beispielprogramm  in \autoref{basic_example} angewendet.\\
+In diesem Kapitel wird der Algorithmus auf das Beispielprogramm  in \autoref{basic_example} angewendet. Dabei ist zu beachten, dass dieses Beispiel lediglich eine mögliche Ablaufsequenz aufzeigt. Änderst sich das Scheduling, ändert sich auch das komplette Verhalten des Algorithmus.\\
 \begin{itemize}
-\item Wenn alle Threads gestartet sind.\\[0.3cm]
+\item \textit{Alle Threads werden gestartet. Jede Instanz eines Threads oder Tasks instanziiert eine neue Vector Clock. Die Lock-History sowie die Programm-History ist noch leer.}\\[0.3cm]
 \begin{tabular}{ c c c }
   	Vektor & Ressource & ThreadNr \\\hline
   	  &   &   \\\hline
+\end{tabular}\hspace*{0.5cm}
+\begin{tabular}{ c c c c }
+  	ThreadNr & Ressource & Vektor & ZugriffsTyp \\\hline
+  	  &   &   &   \\\hline
 \end{tabular}
 \[
 	T1 = \begin{pmatrix}
@@ -406,25 +438,105 @@ In diesem Kapitel wird der Algorithmus auf das Beispielprogramm  in \autoref{bas
 		T3 & 1\\
 	\end{pmatrix}
 \]
-\item lock(lockb) von Thread2\\[0.3cm]
+\item \textit{lock(lockb), w(b), unlock(lockb) von Thread2}\\[0.3cm]
 \begin{tabular}{ c c c }
   	Vektor & Ressource & ThreadNr \\\hline
-  	(,1,0) & lockb & 2 \\\hline
+  	(0,1,0) & lockb & 2 \\\hline
+\end{tabular}\hspace*{0.5cm}
+\begin{tabular}{ c c c c }
+  	ThreadNr & Ressource & Vektor & ZugriffsTyp \\\hline
+  	2 & b & (0,1,0) & write \\\hline
+\end{tabular}
+\[
+	T1 = \begin{pmatrix}
+		T1 & 1\\
+	\end{pmatrix}
+	, T2 = \begin{pmatrix}
+		T2 & 2\\
+	\end{pmatrix}
+	, T3 = \begin{pmatrix}
+		T3 & 1\\
+	\end{pmatrix}
+\]
+\item \textit{lock(locka), w(a), unlock(locka) von Thread1}\\[0.3cm]
+\begin{tabular}{ c c c }
+  	Vektor & Ressource & ThreadNr \\\hline
+  	(1,0,0) & locka & 1 \\
+  	(0,1,0) & lockb & 2 \\\hline
+\end{tabular}\hspace*{0.5cm}
+\begin{tabular}{ c c c c }
+  	ThreadNr & Ressource & Vektor & ZugriffsTyp \\\hline
+  	1 & a & (1,0,0) & write \\
+  	2 & b & (0,1,0) & write \\\hline
 \end{tabular}
 \[
 	T1 = \begin{pmatrix}
 		T1 & 2\\
-		T2 & 0\\
-		T3 & 3\\
 	\end{pmatrix}
 	, T2 = \begin{pmatrix}
-		T1 & 2\\
-		T2 & 0\\
-		T3 & 3\\
+		T2 & 2\\
 	\end{pmatrix}
 	, T3 = \begin{pmatrix}
-		T1 & 2\\
-		T2 & 0\\
+		T3 & 1\\
+	\end{pmatrix}
+\]
+\item \textit{lock(locka), w(a), unlock(locka) von Thread3}\\[0.3cm]
+\begin{tabular}{ c c c }
+  	Vektor & Ressource & ThreadNr \\\hline
+  	(1,2,0) & locka & 3 \\
+  	(0,1,0) & lockb & 2 \\\hline
+\end{tabular}\hspace*{0.5cm}
+\begin{tabular}{ c c c c }
+  	ThreadNr & Ressource & Vektor & ZugriffsTyp \\\hline
+  	1 & a & (1,0,0) & write \\
+  	2 & b & (0,1,0) & write \\
+  	3 & a & (1,2,0) & write \\\hline
+\end{tabular}
+\[
+	T1 = \begin{pmatrix}
+		T1 & 1\\
+	\end{pmatrix}
+	, T2 = \begin{pmatrix}
+		T2 & 2\\
+	\end{pmatrix}
+	, T3 = \begin{pmatrix}
+		T1 & 1\\		
+		T3 & 3\\
+	\end{pmatrix}
+\]
+\item \textit{w(b) von Thread2, w(b) von Thread3}\\[0.3cm]
+\begin{tabular}{ c c c }
+  	Vektor & Ressource & ThreadNr \\\hline
+  	(1,2,0) & locka & 3 \\
+  	(0,1,0) & lockb & 2 \\\hline
+\end{tabular}
+\[
+	T1 = \begin{pmatrix}
+		T1 & 1\\
+	\end{pmatrix}
+	, T2 = \begin{pmatrix}
+		T2 & 2\\
+	\end{pmatrix}
+	, T3 = \begin{pmatrix}
+		T1 & 1\\		
+		T3 & 3\\
+	\end{pmatrix}
+\]
+\item \textit{w(b) von Thread3}\\[0.3cm]
+\begin{tabular}{ c c c }
+  	Vektor & Ressource & ThreadNr \\\hline
+  	(1,2,0) & locka & 3 \\
+  	(0,1,0) & lockb & 2 \\\hline
+\end{tabular}
+\[
+	T1 = \begin{pmatrix}
+		T1 & 1\\
+	\end{pmatrix}
+	, T2 = \begin{pmatrix}
+		T2 & 2\\
+	\end{pmatrix}
+	, T3 = \begin{pmatrix}
+		T1 & 1\\		
 		T3 & 3\\
 	\end{pmatrix}
 \]
@@ -435,40 +547,12 @@ In diesem Kapitel wird der Algorithmus auf das Beispielprogramm  in \autoref{bas
 \begin{flushleft}
 
 \end{flushleft}
-\subsubsection{Instrumentation}
-\begin{flushleft}
-Für die Durchführung des Vector Clock Algorithmus (sh. Kapitel \ref{vector_algorithm}) ist es wichtig die Informationen über Lese- / Schreibzugriffe sowie Locks und Thread.Starts zu erhalten. Dazu muss der bestehende IL Code angepasst (instrumentiert) werden, damit er diese Informationen preisgibt. Dazu wird der Code analysiert und an Stellen mit wichtigen Zugriffen um Code erweitert. Wie in Kapitel \ref{chapter_IL} bereits beschrieben muss dabei der korrekte Aufbau des Stack jederzeit sichergestellt werden. Für die Instrumentation des Codes wird die Library Mono.Cecil aus dem Mono Projekt verwendet. Die Library erlaubt es den IL Code zu lesen und zu bearbeiten. 
-\begin{figure}[H]
-\centering
-\begin{lstlisting}[language=CIL,backgroundcolor=\color{backcolor}]
-IL_001a:  box        [mscorlib]System.Int32
-IL_001f:  stsfld     object TestProgram.Program::_a
-\end{lstlisting}
-\caption{Beispiel ohne Instrumentation}\label{example_codeWithoutInstrum}
-\end{figure}
-\autoref{example_codeWithoutInstrum} zeigt ein Beispiel, eines typischen Schreibzugriff im MS IL. Der Befehl "box" führt ein Boxing eines Integers durch. Dabei wird der Integerwert von einem Valuetype zu einem Referenztyp umgebaut. Auf dem Stack liegt nach dem Boxing die Adresse des Integer-Werts. Diese Adresse wird dann verwendet um den Wert in die Variable "\_a" mit dem Befehl "stsfld"(Store Static Field) zu speichern.\\
-\begin{figure}[H]
-\centering
-\begin{lstlisting}[language=CIL,backgroundcolor=\color{backcolor}]
-IL_001a:  box        [mscorlib]System.Int32
-//----------Instrumented Code...----------------
-IL_001f:  ldsflda    object TestProgram.Program::_a
-IL_0024:  ldc.i4.s   31
-IL_0026:  ldstr      "System.Void TestProgram.Program::Test()"
-IL_002b:  call       void [DPCLibrary]DPCLibrary.DpcLibrary::
-                                 WriteAccess(int32,int32,string)
-//----------...End Instrumentation--------------
-IL_0030:  stsfld     object TestProgram.Program::_a
-\end{lstlisting}
-\caption{Instrumentierter IL Code}\label{example_instrumentedCode}
-\end{figure}
-\autoref{example_instrumentedCode} zeigt den Code nach dem der Dynamic Parallel Checker diesen instrumentiert hat. Wie in \autoref{example_codeWithoutInstrum}, startet der Code mit "box" und endet mit "stsfld". Dazwischen wurde der Code um den Dynamic Parallel Checker erweitert. Um zu wissen auf welche Variable der Schreibzugriff durchgeführt wird, wird mit "ldsflda" (Load static Field Address) die Adresse der Resource ausgelesen und auf den Stack gelegt. Danach wird die Zeilennummer des Schreibzugriff auf den Stack gelegt (Man beachte: Die Zeilennummer zeigt die Zeile vor der Instrumentation) um bei einem Fehler aufzuzeigen, welche Code Zeilen diesen verursacht haben. Daher wird auch als nächstes der Methodennamen als String auf den Stack gelegt. Als letzte instrumentierte Zeile werden dann die Informationen an den Dynamic Parallel Checker übergeben. Dies wird mit der Methode "WriteAccess(int32,int32,string)" durchgeführt. Nach dem Instrumentierten Code hat der Stack wieder den gleichen Zustand wie nach dem "Box" Befehl in \autoref{example_codeWithoutInstrum}.
-\end{flushleft}
 \subsection{Schlussfolgerungen}
 TODO
 \subsubsection{Technische Findings}
 TODO\\
 -Task/Threads
+-GC bringt Probleme
 \subsubsection{Persönliches Fazit}
 TODO
 \subsection{Backlog}
@@ -477,13 +561,13 @@ TODO
 - Partielle Ordnung\\
 - Totale Ordnung
 \section{Abbildungsverzeichnis}
-\listoffigures
+\makeatletter
+\@starttoc{lof}
+\makeatother
 \section{Literaturverzeichnis}
 \renewcommand{\section}[2]{}%
-\begin{thebibliography}{xxxxxxxxxxxxx}
-\bibitem[BMBF, 2003]{bmbf}"'IT-Ausstattung der allgemein bildenden und berufsbildenden 
-                         Schulen in Deutschland"', http://www.schulen-ans-netz.de/   
-                         neuemedien/fakten/dokus/it-ausstattung-2003.pdf, 10.03.2005	
+\begin{thebibliography}{xxxxxxxxxxxxx}	
 \bibitem[ECMA, 2012]{ecma}"Standard ECMA-335 Common Language Infrastructure (CLI)", http://www.ecma-international.org/publications/standards/Ecma-335.htm, 06.2012
+\bibitem[MCA, 1978]{MCA}"Time, Clocks, and the Ordering of Events in a Distributed System" http://research.microsoft.com/en-us/um/people/lamport/pubs/time-clocks.pdf, 07.1978
 \end{thebibliography}
 \end{document}
