@@ -117,7 +117,7 @@ Eine Studie über Dynamic Parallel Checking Methoden
 
 \section{Abstract}
 \begin{flushleft}
-Das Projekt "Dynamic Parallel Checker" behandelt die Entwicklung und Implementation eines Algorithmus zur Erkennung von Nebenläufigkeitsfehlern (Race Conditions) während der Laufzeit(dynamisch). Der entwickelte Algorithmus basiert auf dem Vector Clock Algorithmus von Colin Firdge und Friedmann Mattern \cite{acsc}. Durch den Vector Clock Algortihmus wird erlaubt, Schreib/Lesezugriffe in eine relative Ordnung zu setzen (Happend-Before, Concurrent). Diese Ordnung zeigt auf, wo Zugriffe Concurrent zueinander auf die selben Ressourcen durchgeführt werden (Race Conditions). Neben den Lese - / Schreibzugriffen wird überwacht, wann ein Lock / Unlock auf welche Ressource durchgeführt wird, sowie ein Thread oder Task gestartet wird. Dies vermindert die Anzahl Fehlmeldungen. Locks welche ausgeführt werden, werden in einer Lock-History gehalten. Diese erlaubt es diese als Synchronisationspunkte für den Vector Clock Algorithmus zu verwenden.\\
+Das Projekt "Dynamic Parallel Checker" behandelt die Entwicklung und Implementation eines Algorithmus zur Erkennung von Nebenläufigkeitsfehlern (Race Conditions) während der Laufzeit(dynamisch). Der entwickelte Algorithmus basiert auf dem Vector Clock Algorithmus von Colin Firdge und Friedmann Mattern \cite{acsc}. Durch den Vector Clock Algortihmus wird erlaubt, Schreib/Lesezugriffe in eine relative Ordnung zu setzen (Happend-Before, Concurrent). Diese Ordnung zeigt auf, wo Zugriffe Concurrent zueinander auf die selben Ressourcen durchgeführt werden (Race Conditions). Neben den Lese - / Schreibzugriffen wird überwacht, wann ein Lock / Unlock auf welche Ressource durchgeführt wird, sowie ein Thread oder Task gestartet wird. Dies ermöglicht zusätzliche Synchronisationspunkte und vermindert dadurch die Anzahl Fehlmeldungen (False-Positives). Locks welche ausgeführt werden, werden in einer Lock-History gehalten.\\
 Die Implementation des Algorithmus erlaubt es Microsoft Intermediate Language Code (MSIL) zu überwachen. Dieser Code wird von allen .Net Sprachen verwendet. Daher erlaubt die Implementation die Überwachung von .Net entwickelten Applikationen. Um eine Information über die für den Algorithmus wichtigen Lese- / Schreibzugriffe zu erhalten, wird der MSIL Code über das Framework Mono.Cecil instrumentiert. Dazu wird der bestehende MSIL Code, um Codestellen erweitert, welche an die implementierte Dynamic Parallel Checker Library die Informationen übergeben.
 \end{flushleft}
 \newpage
@@ -173,7 +173,8 @@ Race Conditions wie unter \autoref{fig:exampleRaceCondition2} sind gefährlich, 
 \begin{flushleft}
 Die einzelnen Lese- und Schreibzugriffe in einem System können asynchron in unterschiedlichen Threads ablaufen und dadurch nicht in eine totale Ordnung gebracht werden. Um nun jedem einzelnen Zugriff einen Zeitstempel zuzuordnen verwenden wir eine Vector Clock. Diese Vector Clock wird benötigt um eine Aussage über die Nebenläufigkeit der einzelnen Zugriffe zu machen.\\
 Die Vector Clock basiert auf der Lamport's Clock von Leslie B. Lamport. Jeder Teilnehmer in einem System, in unserem Fall wären dies die einzelnen Threads, besitzt ein eigener Zeitstempel. Der eigene Zeitstempel kann unabhängig inkrementiert werden. Eine Synchronisation zwischen den Zeitstempeln der Threads findet jedoch nur statt wenn ein Synchronisationspunkt vorliegt. Ein Synchronisationspunkt ist z.B. wenn ein Thread 1 ein Lock auf ein Objekt a macht und zuvor ein anderer Thread 2 ein Unlock auf das Objekt a gemacht hat. Dadurch ist sichergestellt, dass jeder Zugriff vor dem Unlock von Thread 1 sicher vor jedem Zugriff nach dem Lock von Thread 2 stattgefunden hat. In diesem Fall wird nun der Zeitstempel von Thread 2 mit dem Zeitstempel von Thread 1 synchronisiert. Der Zeitstempel von Thread 1 bleibt wie gehabt. Mehr Informationen über die einzelnen Synchronisationspunkte finden Sie im Kapitel \ref{implementation} Implementation.\\
-Die Vector Clock erweitert die Lamport Clock nun dadurch, dass jeder Thread nicht nur einen globalen Zeitstempel besitzt sondern einen Vektor, der für jeden Thread einen eigenen Zeitstempel mitführt. D.h. jeder Thread besitzt nun einen eigenen Vektor mit den Zeitstempeln der anderen Threads. Jedoch befindet sich darin nicht der aktuelle Zeitstempel sondern der Zeitstempel der letzten Synchronisation mit dem jeweiligen Thread. Mit Hilfe der Vector Clock kann nun eine Aussage über die Nebenläufigkeit der einzelnen Lese- und Schreibzugriffe eines Thread gemacht werden.\\
+Die Vector Clock erweitert die Lamport Clock nun dadurch, dass jeder Thread nicht nur einen globalen Zeitstempel besitzt sondern einen Vektor, der für jeden Thread einen eigenen Zeitstempel mitführt. D.h. jeder Thread besitzt nun einen eigenen Vektor mit den Zeitstempeln der anderen Threads. Jedoch befindet sich darin nicht der aktuelle Zeitstempel sondern der Zeitstempel der letzten Synchronisation mit dem jeweiligen Thread. Mit Hilfe der Vector Clock kann nun eine Aussage über die Nebenläufigkeit der einzelnen Lese- und Schreibzugriffe eines Thread gemacht werden.
+\newpage
 Beispiel einer Vector Clock:\\
 \[
 	\begin{pmatrix}
@@ -268,7 +269,7 @@ In diesem Kapitel wird die Implementation des Dynamic Prallel Checker genauer er
 Der Vektor Clock Algorithmus wird in diesem Kapitel mit Hilfe von folgendem Pseudo-Code Beispiel genauer erläutert.\\
 \begin{figure}[H]
 \begin{singlespace}
-\begin{lstlisting}
+\begin{lstlisting}[basicstyle=\small]
 //... Deklaration a,b,locka,lockb...
 
 Thread.Start(() =>		// start thread2 (T2)
@@ -305,7 +306,7 @@ Console.WriteLine(a);
 Da der Code in \autoref{basic_example} asynchron durchgeführt wird, werden die 3 enstehenden Thread parallel ausgeführt. \autoref{basic_example_parallel} zeigt was die einzelnen Threads parallel durchführen. "w( ), r( )" stehen für Write und Read Vorgänge des Threads. Der Buchstabe in der Klammer für die Ressource.
 \begin{figure}[H]
 \centering
-\includegraphics[scale=0.4]{images/VectorCheckingAlgorithm.png}
+\includegraphics[scale=0.5]{images/VectorCheckingAlgorithm.png}
 \caption{Darstellung der parallelen Vorgänge von \autoref{basic_example}}
 \label{basic_example_parallel}
 \end{figure}
@@ -475,7 +476,7 @@ In diesem Kapitel wird der Algorithmus auf das Beispielprogramm  in \autoref{bas
 	, T3 = \begin{pmatrix}
 		T3 & 1\\
 	\end{pmatrix}
-\]
+\]\newpage
 \item \textit{lock(locka), w(a), unlock(locka) von Thread3}\\[0.3cm]
 \begin{tabular}{ c c c }
   	Vektor & Ressource & ThreadNr \\\hline
@@ -500,49 +501,14 @@ In diesem Kapitel wird der Algorithmus auf das Beispielprogramm  in \autoref{bas
 		T3 & 3\\
 	\end{pmatrix}
 \]
-\item \textit{w(b) von Thread2, w(b) von Thread3}\\[0.3cm]
-\begin{tabular}{ c c c }
-  	Vektor & Ressource & ThreadNr \\\hline
-  	(1,2,0) & locka & 3 \\
-  	(0,1,0) & lockb & 2 \\\hline
-\end{tabular}
-\[
-	T1 = \begin{pmatrix}
-		T1 & 1\\
-	\end{pmatrix}
-	, T2 = \begin{pmatrix}
-		T2 & 2\\
-	\end{pmatrix}
-	, T3 = \begin{pmatrix}
-		T1 & 1\\		
-		T3 & 3\\
-	\end{pmatrix}
-\]
-\item \textit{w(b) von Thread3}\\[0.3cm]
-\begin{tabular}{ c c c }
-  	Vektor & Ressource & ThreadNr \\\hline
-  	(1,2,0) & locka & 3 \\
-  	(0,1,0) & lockb & 2 \\\hline
-\end{tabular}
-\[
-	T1 = \begin{pmatrix}
-		T1 & 1\\
-	\end{pmatrix}
-	, T2 = \begin{pmatrix}
-		T2 & 2\\
-	\end{pmatrix}
-	, T3 = \begin{pmatrix}
-		T1 & 1\\		
-		T3 & 3\\
-	\end{pmatrix}
-\]
+TODO: Beispiel fertigstellen\\
 \end{itemize}
 \end{flushleft}
 \subsection{Schlussfolgerungen}
 TODO
 \subsubsection{Technische Findings}
 TODO\\
--Task/Threads
+-Task/Threads\\
 -GC bringt Probleme
 \subsubsection{Persönliches Fazit}
 TODO
