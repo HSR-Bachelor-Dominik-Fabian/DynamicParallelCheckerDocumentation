@@ -420,11 +420,11 @@ Hat einer dieser neben läufigen Zugriffe auf die selbe Ressource zugegriffen, w
 In diesem Kapitel wird der Algorithmus auf das Beispielprogramm  in \autoref{basic_example} angewendet. Dabei ist zu beachten, dass dieses Beispiel lediglich eine mögliche Ablaufsequenz aufzeigt. Änderst sich das Scheduling, ändert sich auch das komplette Verhalten des Algorithmus.\\
 \begin{itemize}
 \item \textit{Alle Threads werden gestartet. Jede Instanz eines Threads oder Tasks instanziiert eine neue Vector Clock. Die Lock-History sowie die Programm-History ist noch leer.}\\[0.3cm]
-\begin{tabular}{ c c c }
+\begin{tabular}{ >{\small}c >{\small}c >{\small}c }
   	Vektor & Ressource & ThreadNr \\\hline
   	  &   &   \\\hline
 \end{tabular}\hspace*{0.5cm}
-\begin{tabular}{ c c c c }
+\begin{tabular}{ >{\small}c >{\small}c >{\small}c >{\small}c }
   	ThreadNr & Ressource & Vektor & ZugriffsTyp \\\hline
   	  &   &   &   \\\hline
 \end{tabular}
@@ -440,11 +440,11 @@ In diesem Kapitel wird der Algorithmus auf das Beispielprogramm  in \autoref{bas
 	\end{pmatrix}
 \]
 \item \textit{lock(lockb), w(b), unlock(lockb) von Thread2}\\[0.3cm]
-\begin{tabular}{ c c c }
+\begin{tabular}{ >{\small}c >{\small}c >{\small}c }
   	Vektor & Ressource & ThreadNr \\\hline
   	(0,1,0) & lockb & 2 \\\hline
 \end{tabular}\hspace*{0.5cm}
-\begin{tabular}{ c c c c }
+\begin{tabular}{ >{\small}c >{\small}c >{\small}c >{\small}c }
   	ThreadNr & Ressource & Vektor & ZugriffsTyp \\\hline
   	2 & b & (0,1,0) & write \\\hline
 \end{tabular}
@@ -460,12 +460,12 @@ In diesem Kapitel wird der Algorithmus auf das Beispielprogramm  in \autoref{bas
 	\end{pmatrix}
 \]
 \item \textit{lock(locka), w(a), unlock(locka) von Thread1}\\[0.3cm]
-\begin{tabular}{ c c c }
+\begin{tabular}{ >{\small}c >{\small}c >{\small}c }
   	Vektor & Ressource & ThreadNr \\\hline
   	(1,0,0) & locka & 1 \\
   	(0,1,0) & lockb & 2 \\\hline
 \end{tabular}\hspace*{0.5cm}
-\begin{tabular}{ c c c c }
+\begin{tabular}{ >{\small}c >{\small}c >{\small}c >{\small}c }
   	ThreadNr & Ressource & Vektor & ZugriffsTyp \\\hline
   	2 & b & (0,1,0) & write \\
   	1 & a & (1,0,0) & write \\\hline
@@ -482,12 +482,12 @@ In diesem Kapitel wird der Algorithmus auf das Beispielprogramm  in \autoref{bas
 	\end{pmatrix}
 \]\newpage
 \item \textit{lock(locka), w(a), unlock(locka) von Thread3. Keine Race Condition, weil Happened Before Beziehung zwischen beiden Schreibzugriffen auf Ressource a.}\\[0.3cm]
-\begin{tabular}{ c c c }
+\begin{tabular}{ >{\small}c >{\small}c >{\small}c }
   	Vektor & Ressource & ThreadNr \\\hline
   	(1,0,2) & locka & 3 \\
   	(0,1,0) & lockb & 2 \\\hline
 \end{tabular}\hspace*{0.5cm}
-\begin{tabular}{ c c c c }
+\begin{tabular}{ >{\small}c >{\small}c >{\small}c >{\small}c }
   	ThreadNr & Ressource & Vektor & ZugriffsTyp \\\hline
   	2 & b & (0,1,0) & write \\
   	\color{ForestGreen}1 & \color{ForestGreen}a & \color{ForestGreen}(1,0,0) & \color{ForestGreen}write \\
@@ -506,12 +506,12 @@ In diesem Kapitel wird der Algorithmus auf das Beispielprogramm  in \autoref{bas
 	\end{pmatrix}
 \]
 \item \textit{w(b) von Thread2}\\[0.3cm]
-\begin{tabular}{ c c c }
+\begin{tabular}{ >{\small}c >{\small}c >{\small}c }
   	Vektor & Ressource & ThreadNr \\\hline
   	(1,0,2) & locka & 3 \\
   	(0,1,0) & lockb & 2 \\\hline
 \end{tabular}\hspace*{0.5cm}
-\begin{tabular}{ c c c c }
+\begin{tabular}{ >{\small}c >{\small}c >{\small}c >{\small}c }
   	ThreadNr & Ressource & Vektor & ZugriffsTyp \\\hline
   	2 & b & (0,1,0) & write \\
   	1 & a & (1,0,0) & write \\
@@ -531,12 +531,12 @@ In diesem Kapitel wird der Algorithmus auf das Beispielprogramm  in \autoref{bas
 	\end{pmatrix}
 \]
 \item \textit{w(b) von Thread3. Eine Race Condition ist aufgetreten.}\\[0.3cm]
-\begin{tabular}{ c c c }
+\begin{tabular}{ >{\small}c >{\small}c >{\small}c }
   	Vektor & Ressource & ThreadNr \\\hline
   	(1,0,2) & locka & 3 \\
   	(0,1,0) & lockb & 2 \\\hline
 \end{tabular}\hspace*{0.5cm}
-\begin{tabular}{ c c c c }
+\begin{tabular}{ >{\small}c >{\small}c >{\small}c >{\small}c }
   	ThreadNr & Ressource & Vektor & ZugriffsTyp \\\hline
   	2 & b & (0,1,0) & write \\
   	1 & a & (1,0,0) & write \\
@@ -557,12 +557,12 @@ In diesem Kapitel wird der Algorithmus auf das Beispielprogramm  in \autoref{bas
 	\end{pmatrix}
 \]
 \item \textit{lock(lockb), w(b), unlock(lockb) von Thread1. Zwei Race Conditions sind aufgetreten.}\\[0.3cm]
-\begin{tabular}{ c c c }
+\begin{tabular}{ >{\small}c >{\small}c >{\small}c }
   	Vektor & Ressource & ThreadNr \\\hline
   	(1,0,2) & locka & 3 \\
   	(3,1,0) & lockb & 1 \\\hline
 \end{tabular}\hspace*{0.5cm}
-\begin{tabular}{ c c c c }
+\begin{tabular}{ >{\small}c >{\small}c >{\small}c >{\small}c }
   	ThreadNr & Ressource & Vektor & ZugriffsTyp \\\hline
   	2 & b & (0,1,0) & write \\
   	1 & a & (1,0,0) & write \\
@@ -585,12 +585,12 @@ In diesem Kapitel wird der Algorithmus auf das Beispielprogramm  in \autoref{bas
 	\end{pmatrix}
 \]
 \item \textit{lock(locka), r(a), unlock(locka) von Thread2. Eine Race Condition ist aufgetreten.}\\[0.2cm]
-\begin{tabular}{ c c c }
+\begin{tabular}{ >{\small}c >{\small}c >{\small}c }
   	Vektor & Ressource & ThreadNr \\\hline
   	(1,3,2) & locka & 2 \\
   	(3,1,0) & lockb & 1 \\\hline
 \end{tabular}\hspace*{0.5cm}
-\begin{tabular}{ c c c c }
+\begin{tabular}{ >{\small}c >{\small}c >{\small}c >{\small}c }
   	ThreadNr & Ressource & Vektor & ZugriffsTyp \\\hline
   	2 & b & (0,1,0) & write \\
   	1 & a & (1,0,0) & write \\
@@ -616,12 +616,12 @@ In diesem Kapitel wird der Algorithmus auf das Beispielprogramm  in \autoref{bas
 	\end{pmatrix}
 \]
 \item \textit{lock(lockb), r(b), unlock(lockb) von Thread3. Eine Race Condition ist aufgetreten.}\\[0.2cm]
-\begin{tabular}{ c c c }
+\begin{tabular}{ >{\small}c >{\small}c >{\small}c }
   	Vektor & Ressource & ThreadNr \\\hline
   	(1,3,2) & locka & 2 \\
   	(3,1,4) & lockb & 3 \\\hline
 \end{tabular}\hspace*{0.5cm}
-\begin{tabular}{ c c c c }
+\begin{tabular}{ >{\small}c >{\small}c >{\small}c >{\small}c }
   	ThreadNr & Ressource & Vektor & ZugriffsTyp \\\hline
   	2 & b & (0,1,0) & write \\
   	1 & a & (1,0,0) & write \\
@@ -649,12 +649,12 @@ In diesem Kapitel wird der Algorithmus auf das Beispielprogramm  in \autoref{bas
 	\end{pmatrix}
 \]
 \item \textit{r(a) von Thread1. Eine Race Condition ist aufgetreten.}\\[0.2cm]
-\begin{tabular}[font=small]{ c c c }
+\begin{tabular}{ >{\small}c >{\small}c >{\small}c }
   	Vektor & Ressource & ThreadNr \\\hline
   	(1,3,2) & locka & 2 \\
   	(3,1,4) & lockb & 3 \\\hline
 \end{tabular}\hspace*{0.5cm}
-\begin{tabular}{ c c c c }
+\begin{tabular}{ >{\small}c >{\small}c >{\small}c >{\small}c }
   	ThreadNr & Ressource & Vektor & ZugriffsTyp \\\hline
   	2 & b & (0,1,0) & write \\
   	1 & a & (1,0,0) & write \\
@@ -683,15 +683,19 @@ In diesem Kapitel wird der Algorithmus auf das Beispielprogramm  in \autoref{bas
 \end{itemize}
 \end{flushleft}
 \newpage
-\subsection{Schlussfolgerungen}
-TODO
-\subsubsection{Technische Findings}
+\section{Schlussfolgerungen}
 TODO\\
--Task/Threads\\
--GC bringt Probleme
-\subsubsection{Persönliches Fazit}
-TODO
-\subsection{Backlog}
+\subsection{Technische Findings}
+TODO\\
+\subsubsection{Task/Threads}
+\subsubsection{Garbage Collector}
+Der Garbage Colletor (GC) verwaltet die Belegung und Freigabe von Arbeitsspeicher einer Anwendung. Bei der Erzeugung eines Objektes, wird dem Objekt die Speicherplatzadresse auf dem Heap zugewiesen. Da nicht unendlich Arbeitsspeicher vorhanden ist, greift der GC ein, und reorganisiert die Speicherplatzbelegung. Dabei kann es vorkommen, dass bestehenden Objekten eine neue Speicherstelle und somit auch eine neue Speicheradresse zugewiesen wird. Dies kann für den Dynamic Parallel Checker ein grosses Problem darstellen.\\
+Der Dynamic Parallel Checker identifiziert die Objekte, auf die ein Zugriff stattgefunden hat, mit Hilfe deren Adressen. D.h. sobald der Garbage Collector den Arbeitsspeicher reorganisiert hat, haben die selben Objekte nicht mehr die gleiche Adresse und der Dynamic Parallel Checker funktioniert dadurch nicht mehr. Es gibt keine Möglichkeit die Änderungen des GCs in Erfahrung zu bringen und dadurch die gesamte History anzupassen. Sollte der GC eine Reorganisation durchführen, meldet die Dynamic Parallel Checker Library Fehlmeldungen (False-Positives).
+\subsection{Persönliches Fazit}
+\subsubsection{Fabian Keller}
+\subsubsection{Dominik Heeb}
+
+\section{Backlog}
 TODO
 \section{Glossar}
 - Partielle Ordnung\\
@@ -704,7 +708,8 @@ TODO
 \renewcommand{\section}[2]{}%
 \begin{thebibliography}{xxxxxxxxxxxxx}
 \bibitem[ECMA, 2012]{ecma}"Standard ECMA-335 Common Language Infrastructure (CLI)", http://www.ecma-international.org/publications/standards/Ecma-335.htm, 06.2012
-\bibitem[MCA, 1978]{MCA}"Time, Clocks, and the Ordering of Events in a Distributed System" http://research.microsoft.com/en-us/um/people/lamport/pubs/time-clocks.pdf, 07.1978
-\bibitem[ACSC, 1988]{acsc}"Timestamps in Message-Passing Systems That Preserve the Partial Ordering" http://zoo.cs.yale.edu/classes/cs426/2012/lab/bib/fidge88timestamps.pdf, 02.1988
+\bibitem[MCA, 1978]{MCA}"Time, Clocks, and the Ordering of Events in a Distributed System", http://research.microsoft.com/en-us/um/people/lamport/pubs/time-clocks.pdf, 07.1978
+\bibitem[ACSC, 1988]{acsc}"Timestamps in Message-Passing Systems That Preserve the Partial Ordering", http://zoo.cs.yale.edu/classes/cs426/2012/lab/bib/fidge88timestamps.pdf, 02.1988
+\bibitem[MSDN, 2015]{msdn}"MSDN - Memory Management and Garbage Collection", https://msdn.microsoft.com/de-de/library/0xy59wtx(v=vs.110).aspx, 08.2012
 \end{thebibliography}
 \end{document}
