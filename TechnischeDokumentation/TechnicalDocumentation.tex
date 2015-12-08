@@ -25,7 +25,7 @@
 \title{Dynamic Paralle Checker}
 \pagestyle{fancy}
 \fancyhead{}
-\fancyhead[L]{Dynamic Paralle Checker}
+\fancyhead[L]{Dynamic Parallel Checker}
 \fancyhead[R]{Domink Heeb, Fabian Keller}
 \fancyfoot{}
 \fancyfoot[R]{Seite \thepage}
@@ -123,6 +123,8 @@ Im Rahmen unseres Projektes haben wir uns auf einen gewissen Umfang der Instrume
 Die Erkennung von Race Conditions findet innerhalb unserer eigenen Dynamic Parallel Checker Library statt. Damit diese Library die benötigten Informationen erhält, wann welcher Thread einen Lese- oder Schreibzugriff auf welche Ressource durchgeführt hat, fügen wir bei den relevanten Operation Codes des IL Codes einen Aufruf auf unsere Library hinzu. 
 Diesem Aufruf übergeben wir die Referenz zu der Ressource, auf die zugegriffen wurde, die Zeilennummer des IL Codes und den Methodennamen, in dem der Zugriff stattgefunden hat. In der Library wird für jeden Thread oder Task eine eigene History der Lese- und Schreibzugriffe mitgeführt. Diese Informationen werden verwendet um die neben läufigen Zugriffe zu identifizieren und um dann zu überprüfen, ob eine Race Condition auftrat. Zusätzlich zu der Zugriffs-History wird auch noch eine Lock-History geführt, die es erlaubt eine Synchronisation zwischen zwei Threads oder Tasks , die durch einen Lock zwingend sequenziell abgelaufen sind, durchzuführen. Mehr dazu im Kapitel \ref{lock_history} Lock-History.\\
 Unser Projekt beinhaltet ebenfalls eine WPF Applikation, die es ermöglicht unsere Library zu nutzen. Unsere DPC Library meldet alle Race Conditions an diese Applikation und stellt diese in einer Liste dar. Als kleines Zusatzfeature für die Erleichterung der Fehlersuche dekompilieren wir den Code der betroffenen Methoden und stellen diesen ebenfalls dar.\\
+TODO\\
+Das Projekt "Dynamic Parallel Checker" behandelt die Entwicklung und Implementation eines Algorithmus zur Erkennung von Nebenläufigkeitsfehlern (Race Conditions) während der Laufzeit(dynamisch). Der entwickelte Algorithmus basiert auf dem Vector Clock Algorithmus von Colin Firdge und Friedmann Mattern \cite{acsc}. Durch den Vector Clock Algortihmus wird erlaubt, Schreib/Lesezugriffe in eine relative Ordnung zu setzen (Happend-Before, Concurrent). Diese Ordnung zeigt auf, wo Zugriffe Concurrent zueinander auf die selben Ressourcen durchgeführt werden (Race Conditions).
 \end{flushleft}
 \newpage
 \section{Technischer Bericht}
@@ -259,7 +261,7 @@ Um erfolgreich den Source Code für den Dynamic Parallel Checker zu instrumentie
 \begin{figure}[H]
 \centering
 \includegraphics[scale=0.5]{images/BeispielInjection.png}
-\caption{Beispiel Code Injection, Stack verhalten}
+\caption{Beispiel Code Injection, Stack Verhalten}
 \label{example_injection}
 \end{figure}
 In \autoref{example_injection} ist ein Beispiel dargestellt, wie eine Injection den Stack verwaltet und dabei die benötigte Information "obj" aus dem Stack extrahiert und den Ursprungszustand wiederherstellt. Da bei einem LIFO Stack nur auf das oberste Element zugegriffen werden kann, wird der Top-Wert "value" in eine lokale Variable gespeichert. Nach dem Abbau des duplizieren "obj" wird der Wert wieder aus der Variable auf den Stack gelegt.
@@ -452,5 +454,6 @@ TODO
                          Schulen in Deutschland"', http://www.schulen-ans-netz.de/   
                          neuemedien/fakten/dokus/it-ausstattung-2003.pdf, 10.03.2005	
 \bibitem[ECMA, 2012]{ecma}"Standard ECMA-335 Common Language Infrastructure (CLI)", http://www.ecma-international.org/publications/standards/Ecma-335.htm, 06.2012
+\bibitem[ACSC, 1988]{acsc}"Timestamps in Message-Passing Systems That Preserve the Partial Ordering" http://zoo.cs.yale.edu/classes/cs426/2012/lab/bib/fidge88timestamps.pdf, 02.1988
 \end{thebibliography}
 \end{document}
