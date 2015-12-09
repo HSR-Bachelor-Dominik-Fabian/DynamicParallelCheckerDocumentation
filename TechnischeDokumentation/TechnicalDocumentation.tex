@@ -16,7 +16,6 @@
 \usepackage[usenames,dvipsnames]{xcolor}
 \usepackage{DejaVuSans}
 \usepackage[T1]{fontenc}
-\usepackage{amsmath}
 \usepackage{float}
 \usepackage{colortbl}
 
@@ -685,28 +684,48 @@ In diesem Kapitel wird der Algorithmus auf das Beispielprogramm  in \autoref{bas
 \newpage
 \section{Schlussfolgerungen}
 TODO\\
+\subsection{Performance}
 \subsection{Technische Findings}
 TODO\\
 \subsubsection{Task/Threads}
 \subsubsection{Garbage Collector}
 Der Garbage Colletor (GC) verwaltet die Belegung und Freigabe von Arbeitsspeicher einer Anwendung. Bei der Erzeugung eines Objektes, wird dem Objekt die Speicherplatzadresse auf dem Heap zugewiesen. Da nicht unendlich Arbeitsspeicher vorhanden ist, greift der GC ein, und reorganisiert die Speicherplatzbelegung. Dabei kann es vorkommen, dass bestehenden Objekten eine neue Speicherstelle und somit auch eine neue Speicheradresse zugewiesen wird. Dies kann für den Dynamic Parallel Checker ein grosses Problem darstellen.\\
-Der Dynamic Parallel Checker identifiziert die Objekte, auf die ein Zugriff stattgefunden hat, mit Hilfe deren Adressen. D.h. sobald der Garbage Collector den Arbeitsspeicher reorganisiert hat, haben die selben Objekte nicht mehr die gleiche Adresse und der Dynamic Parallel Checker funktioniert dadurch nicht mehr. Es gibt keine Möglichkeit die Änderungen des GCs in Erfahrung zu bringen und dadurch die gesamte History anzupassen. Sollte der GC eine Reorganisation durchführen, meldet die Dynamic Parallel Checker Library Fehlmeldungen (False-Positives).
+Der Dynamic Parallel Checker identifiziert die Objekte, auf die ein Zugriff stattgefunden hat, mit Hilfe deren Adressen. Sobald der Garbage Collector den Arbeitsspeicher reorganisiert hat, haben die selben Objekte nicht mehr die gleiche Adresse und der Dynamic Parallel Checker funktioniert dadurch nicht mehr. Es gibt keine Möglichkeit die Änderungen des GCs in Erfahrung zu bringen und dadurch die gesamte History anzupassen. Sollte der GC eine Reorganisation durchführen, meldet die Dynamic Parallel Checker Library Fehlmeldungen (False-Positives).
 
 \section{Backlog}
-TODO
-\section{Glossar}
+\subsection{Corelib Methoden}
+\begin{flushleft}
+
+\end{flushleft}
+\subsection{Funktionsumfang}
+TODO\\
+- Welche Methoden fehlen bei der Instrumentierung noch?
+\section*{Glossar}
+\addcontentsline{toc}{section}{Glossar}
 - Partielle Ordnung\\
-- Totale Ordnung
-\section{Abbildungsverzeichnis}
+- Totale Ordnung\\
+- Thread\\
+- Task\\
+\section*{Abbildungsverzeichnis}
+\addcontentsline{toc}{section}{Abbildungsverzeichnis}
 \makeatletter
 \@starttoc{lof}
 \makeatother
-\section{Literaturverzeichnis}
-\renewcommand{\section}[2]{}%
+\section*{Literaturverzeichnis}
+\addcontentsline{toc}{section}{Literaturverzeichnis}
+\newcommand\oldsection{}
+\let\oldsection=\section
+\renewcommand{\section}[2]{}
 \begin{thebibliography}{xxxxxxxxxxxxx}
-\bibitem[ECMA, 2012]{ecma}"Standard ECMA-335 Common Language Infrastructure (CLI)", http://www.ecma-international.org/publications/standards/Ecma-335.htm, 06.2012
-\bibitem[MCA, 1978]{MCA}"Time, Clocks, and the Ordering of Events in a Distributed System", http://research.microsoft.com/en-us/um/people/lamport/pubs/time-clocks.pdf, 07.1978
-\bibitem[ACSC, 1988]{acsc}"Timestamps in Message-Passing Systems That Preserve the Partial Ordering", http://zoo.cs.yale.edu/classes/cs426/2012/lab/bib/fidge88timestamps.pdf, 02.1988
-\bibitem[MSDN, 2015]{msdn}"MSDN - Memory Management and Garbage Collection", https://msdn.microsoft.com/de-de/library/0xy59wtx(v=vs.110).aspx, 08.2012
+\bibitem[ECMA, 2012]{ecma}"Standard ECMA-335 Common Language Infrastructure (CLI)", \href{http://www.ecma-international.org/publications/standards/Ecma-335.htm}{http://www.ecma-international.org/publications/standards/Ecma-335.htm}, 06.2012
+\bibitem[MCA, 1978]{MCA}"Time, Clocks, and the Ordering of Events in a Distributed System", \href{http://research.microsoft.com/en-us/um/people/lamport/pubs/time-clocks.pdf}{http://research.microsoft.com/en-us/um/people/lamport/pubs/time-clocks.pdf}, 07.1978
+\bibitem[ACSC, 1988]{acsc}"Timestamps in Message-Passing Systems That Preserve the Partial Ordering", \href{http://zoo.cs.yale.edu/classes/cs426/2012/lab/bib/fidge88timestamps.pdf}{http://zoo.cs.yale.edu/classes/cs426/2012/lab/bib/fidge88timestamps.pdf}, 02.1988
+\bibitem[MSDN, 2015]{msdn}"MSDN - Memory Management and Garbage Collection", \href{https://msdn.microsoft.com/de-de/library/0xy59wtx(v=vs.110).aspx}{https://msdn.microsoft.com/de-de/library/0xy59wtx(v=vs.110).aspx}, 08.2012
 \end{thebibliography}
+\let\section=\oldsection
+\section*{Anhang}
+\addcontentsline{toc}{section}{Anhang}
+\subsection*{Persönliches Fazit}
+\subsubsection*{Fabian Keller}
+\subsubsection*{Dominik Heeb}
 \end{document}
