@@ -740,9 +740,10 @@ Folgende Synchronisationspunkte könnten bei einer Weiterentwicklung dieses Proj
 TODO\\
 - Deadlock Erkennung
 \subsection{Vision}
-TODO\\
-- Testing Framework einbauen
-- Online Plattform für Testing
+\subsubsection*{Unit Testing}
+\begin{flushleft}
+Um die Erkennungsrate des Algorithmus erhöhen zu können, müssen Tools mehrmals den Test durchlaufen. Daher ist eine Vision, den Algorithmus in ein Concurrent-UnitTesting Framework einzubauen. Dieses erlaubt dem Entwickler das erstellen von ConcurrentTests, welche nicht nur einen synchronen Test durchführen, sondern die Tests parallel zu einander ausführt um Race Conditions zu provozieren. Der Dynamic Parallel Checker Algortihmus überwacht die Unit Tests und meldet auftretende Race Conditions. Dadurch würden Tools vor dem Deployment und im Entwicklungszyklus jederzeit auf Race Conditions getestet, was die Entwickler sensibilisiert auf parallele Probleme und die Qualität der Software erhöht. Das Unit Testing Framework kann durch einen eigenen Scheduler in der Erkennung noch weiter verbessert werden. Durch ein gezieltes Verzahnen der Threads könnte provoziert werden, dass diese Race Conditions oder Deadlocks generieren
+\end{flushleft}
 \section*{Glossar}
 \addcontentsline{toc}{section}{Glossar}
 - Partielle Ordnung\\
