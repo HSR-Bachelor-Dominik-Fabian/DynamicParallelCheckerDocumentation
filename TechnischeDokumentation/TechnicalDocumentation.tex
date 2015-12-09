@@ -208,7 +208,7 @@ Die Happened-Before Beziehung kann somit eine Aussage darüber machen, ob zwisch
 \end{tabular}
 \end{center}
 \begin{flushleft}
-Der Zeitstempel eines Threads 1 in einer Vector Clock ist grösser oder gleich (>=) dem Zeitstempel des selben Threads 1 in der Vector Clock von Thread 2. Mindestens eine Kompontente der gesamten Vector Clock muss aber echt grösser (>) sein als in der anderen Vector Clock. In dieser Beziehung hat sicher eine Synchronisation zwischen den beiden Threads 1 und 2 stattgefunden und dadurch sind diese beiden Zugriffe keine potenzielle Race Condition.\\
+Der Zeitstempel eines Threads 1 in einer Vector Clock ist grösser oder gleich (>=) dem Zeitstempel des selben Threads 1 in der Vector Clock von Thread 2. Mindestens eine Komponente der gesamten Vector Clock muss aber echt grösser (>) sein als in der anderen Vector Clock. In dieser Beziehung hat sicher eine Synchronisation zwischen den beiden Threads 1 und 2 stattgefunden und dadurch sind diese beiden Zugriffe keine potenzielle Race Condition.\\
 Beispiel (T1 happened before T2):\\
 \[
 	T1 = \begin{pmatrix}
@@ -686,12 +686,32 @@ In diesem Kapitel wird der Algorithmus auf das Beispielprogramm  in \autoref{bas
 \section{Schlussfolgerungen}
 TODO\\
 \subsection{Technische Findings}
-TODO\\
 \subsubsection{Task/Threads}
+\begin{flushleft}
+Das .Net Framework von Microsoft kennt zwei asynchrone Operationstypen. Task oder Threads. Der Unterschied dieser zwei Typen liegt auf der Ausführungsumgebung. Threads werden direkt gestartet und vom Prozessor parallel verarbeitet. Task wurden zusammen mit der Task Parallel Library eingeführt. Dieser Typ wird nicht direkt ausgeführt, sondern in eine Queue geladen und dann von Worker Threads berechnet. Die Worker Threads werden vom .Net Framework automatisch gestartet. Die Anzahl wird durch die Laufzeitumgebung bestimmt, z.B. wie viele Kernen der Prozessor hat. Der Vorteil dieser Methode gegenüber der Threads ist es, das die Belastung auf den Arbeitsspeicher und Prozessor bei vielen parallelen Vorgängen optimiert und gesenkt wird. Der Nachteil ist, das es schneller zu Deadlocks kommen kann, wenn die Threads untereinander abhängig sind.\\
+Für die Entwicklung des Dynamic Parallel Checker ist der Unterschied zwischen Task und Threads dahingehend wichtig, da die ID des Threads bei Tasks der ID des Worker Thread entspricht. Um den Detailgrad der Erkennung zu erhöhen, wurde bei Tasks die Task ID und nicht die Thread ID für die Erkennung verwendet.
+\end{flushleft}
 \subsubsection{Garbage Collector}
+\begin{flushleft}
 Der Garbage Colletor (GC) verwaltet die Belegung und Freigabe von Arbeitsspeicher einer Anwendung. Bei der Erzeugung eines Objektes, wird dem Objekt die Speicherplatzadresse auf dem Heap zugewiesen. Da nicht unendlich Arbeitsspeicher vorhanden ist, greift der GC ein, und reorganisiert die Speicherplatzbelegung. Dabei kann es vorkommen, dass bestehenden Objekten eine neue Speicherstelle und somit auch eine neue Speicheradresse zugewiesen wird. Dies kann für den Dynamic Parallel Checker ein grosses Problem darstellen.\\
 Der Dynamic Parallel Checker identifiziert die Objekte, auf die ein Zugriff stattgefunden hat, mit Hilfe deren Adressen. D.h. sobald der Garbage Collector den Arbeitsspeicher reorganisiert hat, haben die selben Objekte nicht mehr die gleiche Adresse und der Dynamic Parallel Checker funktioniert dadurch nicht mehr. Es gibt keine Möglichkeit die Änderungen des GCs in Erfahrung zu bringen und dadurch die gesamte History anzupassen. Sollte der GC eine Reorganisation durchführen, meldet die Dynamic Parallel Checker Library Fehlmeldungen (False-Positives).
-
+\end{flushleft}
+\subsubsection{Short Branches}
+\begin{flushleft}
+Der MSIL Code verwendet für Befehle wie "try/catch/finally/if/else usw." Branches. Ein Branch ist ein Befehl im IL Code welcher eine Sprungmarke definiert. Dabei wird als Operand die Code Zeile zu welcher der Branch springen soll definiert. MSIL kennt 13 verschiedene Branches (sh. \cite{ecma} III.3.5 - III.3.18 ohne III.3.16), alle funktionieren nach dem selben Prinzip. Der Operand des Befehls beinhaltet die Code Zeile, zur welcher gesprungen werden soll.\\
+Durch die Instrumentation für den Dynamic Parallel Checker verändern sich die Zeilennummern. Daher ist es wichtig, dass diese nachgeführt werden. Mono.Cecil unterstützt den Entwickler soweit, das über die direkte Referenz auf die Zielcodezeile der Wert nachgetragen wird. Jedoch besitzen alle Branches neben dem Standard OpCode, auch ein "*.s" OpCode. Zum Beispiel gibt es für "brtrue IL\_3A303", den Code "brtrue.s IL\_03", wobei "*.s" nur für Code Zeilennummern kleiner "IL\_FF" verwendet werden kann. Durch die Instrumentation des Dynamic Parallel Checkers kann dieser Wert aber überschritten werden. Mono.Cecil hat keine automatische Erkennung solcher Branch-Fehler.
+\begin{figure}[H]
+\centering
+\begin{lstlisting}[backgroundcolor=\color{backcolor}]
+method.Body.SimplifyMacros();
+/*-------------Code Instrumentation--------------*/
+method.Body.OptimizeMacros();
+\end{lstlisting}
+\caption{Branch Optimierung durch Mono.Cecil}\label{branch_optimization}
+\end{figure}
+Die Methode SimplifyMacros in \autoref{branch_optimization} wird dazu verwendet, das Mono.Cecil alle "brtrue.s" in "brtrue" umwandelt. Dadurch kann die Zeilennummer auf die grösse die nötig ist gesetzt werden. Der Befehl OptimizeMacros versucht dann nach der Instrumentation "brtrue" wieder auf "brtrue.s" zu wandeln. Dadurch wird der Code wieder optimiert wenn möglich.\\
+Wenn der Code in Mono.Cecil eingelesen wird, werden alle Adressen in den Branches als Referenz auf die jeweilige Instanz der Ziel-Methode gehalten. Wenn die Methode gelöscht wird, ist die Referenz ungültig und Mono.Cecil zeigt auf eine Unbekannte Adresse. Dadurch wird der Code instabil. Daher sollte wenn möglich Code nicht aus der Instrumentation gelöscht werden, sondern der OpCode und Operand manuell ersetzt werden.
+\end{flushleft}
 \section{Backlog}
 TODO
 \section{Glossar}
@@ -708,5 +728,6 @@ TODO
 \bibitem[MCA, 1978]{MCA}"Time, Clocks, and the Ordering of Events in a Distributed System", http://research.microsoft.com/en-us/um/people/lamport/pubs/time-clocks.pdf, 07.1978
 \bibitem[ACSC, 1988]{acsc}"Timestamps in Message-Passing Systems That Preserve the Partial Ordering", http://zoo.cs.yale.edu/classes/cs426/2012/lab/bib/fidge88timestamps.pdf, 02.1988
 \bibitem[MSDN, 2015]{msdn}"MSDN - Memory Management and Garbage Collection", https://msdn.microsoft.com/de-de/library/0xy59wtx(v=vs.110).aspx, 08.2012
+\bibitem[MONO, 2015]{monocecil} "Mono.Cecil Library",\\ http://www.mono-project.com/docs/tools+libraries/libraries/Mono.Cecil/ 
 \end{thebibliography}
 \end{document}
