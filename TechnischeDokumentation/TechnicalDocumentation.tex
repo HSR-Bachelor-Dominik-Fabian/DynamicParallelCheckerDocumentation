@@ -693,13 +693,36 @@ Der Garbage Colletor (GC) verwaltet die Belegung und Freigabe von Arbeitsspeiche
 Der Dynamic Parallel Checker identifiziert die Objekte, auf die ein Zugriff stattgefunden hat, mit Hilfe deren Adressen. Sobald der Garbage Collector den Arbeitsspeicher reorganisiert hat, haben die selben Objekte nicht mehr die gleiche Adresse und der Dynamic Parallel Checker funktioniert dadurch nicht mehr. Es gibt keine Möglichkeit die Änderungen des GCs in Erfahrung zu bringen und dadurch die gesamte History anzupassen. Sollte der GC eine Reorganisation durchführen, meldet die Dynamic Parallel Checker Library Fehlmeldungen (False-Positives).
 
 \section{Backlog}
-\subsection{Corelib Methoden}
+\subsection{Fehlende Synchronisationsoperationen}
 \begin{flushleft}
-
+Der Umfang dieser Arbeit beschränkte sich aus zeitlichen Gründen auf einen gewissen Umfang. Die bereits instrumentierten Synchronisationspunkte befinden sich im Anhang. (sh. \nameref{sec:instrumentierte_methoden})\\
+Folgende Synchronisationspunkte könnten bei einer Weiterentwicklung dieses Projekts noch umgesetzt werden:
+\begin{itemize}
+\setlength\itemsep{0em}
+\item Thread.Abort()
+\item Thread.Interrupt()
+\item Task.Result()
+\item Task.WaitAll()
+\item Task.WaitAny()
+\item Task.ContinueWith()
+\item Task.WhenAll() / Task.WhenAny()
+\item Task.Delay()
+\item Task.Factory.ContinueWhenAny() / Task.Factory.ContinueWhenAll()
+\item Task.Factory.FromAsync()
+\item async await
+\item volatile Variablen
+\item Semaphoren
+\item Finalizer
+\item Parallel.Invoke() / Parallel.For() / Parallel.ForEach()
+\end{itemize}
 \end{flushleft}
 \subsection{Funktionsumfang}
 TODO\\
-- Welche Methoden fehlen bei der Instrumentierung noch?
+- Deadlock Erkennung
+\subsection{Vision}
+TODO\\
+- Testing Framework einbauen
+- Online Plattform für Testing
 \section*{Glossar}
 \addcontentsline{toc}{section}{Glossar}
 - Partielle Ordnung\\
@@ -728,4 +751,30 @@ TODO\\
 \subsection*{Persönliches Fazit}
 \subsubsection*{Fabian Keller}
 \subsubsection*{Dominik Heeb}
+\subsection*{Liste instrumentierte mscorlib Methoden}\label{sec:instrumentierte_methoden}
+Bereits instrumentierte Methoden:
+\begin{itemize}
+\setlength\itemsep{0em}
+\item Thread.Start()
+\item Thread.Join()
+\item Task.Start()
+\item Task.Wait()
+\item Task.Run()
+\item Task.Factory.StartNew()
+\end{itemize}
+\subsection*{Liste instrumentierte MSIL Operationen}
+Bereits instrumentierte MSIL Operationen:
+\begin{itemize}
+\setlength\itemsep{0em}
+\item ldsfld (Load static field)
+\item stsfld (Store static field)
+\item ldfld (Load field)
+\item stfld (Store field)
+\item ldelem (Load element of array)
+\item stelem (Store element of array)
+\item initobj (Init object)
+\item call (Call method)
+\item callvirt (Call virtual method)
+\end{itemize}
+Mehr Informationen zu den einzelnen Operation Codes: siehe \cite{ecma}.
 \end{document}
