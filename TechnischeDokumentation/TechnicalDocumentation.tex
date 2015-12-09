@@ -736,9 +736,11 @@ Folgende Synchronisationspunkte könnten bei einer Weiterentwicklung dieses Proj
 \item Parallel.Invoke() / Parallel.For() / Parallel.ForEach()
 \end{itemize}
 \end{flushleft}
-\subsection{Funktionsumfang}
-TODO\\
-- Deadlock Erkennung
+\subsection{Funktionsweise}
+\subsubsection*{Deadlock Erkennung}
+Die implementierte Funktionalität erlaubt es zur Zeit nur, Race Conditions zu erkennen. Von Vorteil wäre es, wenn zusätzlich noch Deadlocks erkannt werden. Dafür müsste aber der vorhandene Algorithmus noch erweitert werden. Vor jedem Lock auf eine Ressource müsste die Dynamic Parallel Checker Library informiert werden und eine eigene Liste geführt werden, welcher Thread welchen Lock bezogen hat. Sobald ein Thread den Lock freigibt, müsste dieser Eintrag wieder gelöscht werden. Dadurch könnte erkannt werden, dass zwei unterschiedliche Threads sich gegenseitig sperren.
+\subsubsection*{Dependencies instrumentieren}
+In dieser Version wird eine spezifische Applikation instrumentiert. Sollte die Anwendung noch  Abhängigkeiten zu weiteren, selbst entwickelten Libraries besitzen, werden Race Conditions, aus diesen Libraries, nicht erkannt. Dies, aufgrund der Tatsache, dass die Abhängigkeiten nicht instrumentiert werden. Diese zusätzliche Funktionalität, würde den Umfang des Überprüfungsbereichs erweitern. Dabei ist zu beachten, dass die Microsoft Core Library (mscorlib) nicht mit instrumentiert wird. Dies würde den Rahmen der Überwachung sprengen.
 \subsection{Vision}
 TODO\\
 - Testing Framework einbauen
