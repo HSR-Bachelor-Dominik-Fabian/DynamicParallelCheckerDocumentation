@@ -116,10 +116,8 @@ Eine Studie über Dynamic Parallel Checking Methoden
 \newpage
 
 \section{Abstract}
-\begin{flushleft}
-Das Projekt "Dynamic Parallel Checker" behandelt die Entwicklung und Implementation eines Algorithmus zur Erkennung von Nebenläufigkeitsfehlern (Race Conditions) während der Laufzeit(dynamisch). Der entwickelte Algorithmus basiert auf dem Vector Clock Algorithmus von Colin Firdge und Friedmann Mattern \cite{acsc}. Durch den Vector Clock Algortihmus wird erlaubt, Schreib/Lesezugriffe in eine relative Ordnung zu setzen (Happend-Before, Concurrent). Diese Ordnung zeigt auf, wo Zugriffe Concurrent zueinander auf die selben Ressourcen durchgeführt werden (Race Conditions). Neben den Lese - / Schreibzugriffen wird überwacht, wann ein Lock / Unlock auf welche Ressource durchgeführt wird, sowie ein Thread oder Task gestartet wird. Dies ermöglicht zusätzliche Synchronisationspunkte und vermindert dadurch die Anzahl Fehlmeldungen (False-Positives). Locks welche ausgeführt werden, werden in einer Lock-History gehalten.\\
-Die Implementation des Algorithmus erlaubt es Microsoft Intermediate Language Code (MSIL) zu überwachen. Dieser Code wird von allen .Net Sprachen verwendet. Daher erlaubt die Implementation die Überwachung von .Net entwickelten Applikationen. Um eine Information über die für den Algorithmus wichtigen Lese- / Schreibzugriffe zu erhalten, wird der MSIL Code über das Framework Mono.Cecil instrumentiert. Dazu wird der bestehende MSIL Code, um Codestellen erweitert, welche an die implementierte Dynamic Parallel Checker Library die Informationen übergeben.
-\end{flushleft}
+Das Projekt "Dynamic Parallel Checker" behandelt die Entwicklung und Implementation eines Algorithmus zur Erkennung von Nebenläufigkeitsfehlern (Race Conditions) während der Laufzeit (dynamisch). Der entwickelte Algorithmus basiert auf dem Vector Clock Algorithmus von Colin Firdge und Friedmann Mattern \cite{acsc}. Mit dem Vector Clock Algortihmus ist es möglich, nebenläufige Schreib- und Lesezugriffe in eine partielle Ordnung zu bringen (Happend-Before, Concurrent). Diese Ordnung erlaubt es anschliessend Data Races zu identifiziert. Eine Date Race liegt vor, wenn Zugriffe nebenläufig mit mindestens einer Schreiboperation auf die selben Ressourcen zugegriffen haben. Neben den Lese- und Schreibzugriffen wird überwacht, wann ein Lock oder Unlock auf welche Ressource durchgeführt wird, sowie ein Thread oder Task gestartet wird. Diese Synchronisationspunkte dienen dazu, um die Vector Clocks zwischen den beiden Threads oder Tasks zu synchronisieren. Dadurch kann anschliessend mit Hilfe der Happened-Before Beziehung nachgewiesen werden, dass diese Zugriffe nicht nebenläufig stattgefunden haben. Alle Lese- und Schreibzugriffe werden pro Thread oder Task in einer optimierten History gehalten. Zudem werden die letzten Locks, welche ausgeführt wurden, in einer Lock-History gehalten, um beim erneuten Auftreten eines Locks eine Synchronisation durchzuführen.\\
+Die Implementation des Algorithmus instrumentiert Microsoft Intermediate Language Code (MSIL), der von allen .Net Sprachen verwendet wird, mit Hilfe des Frameworks Mono.Cecil. Daher ist es möglich mit dem Dynamic Parallel Checker alle in .Net entwickelten Applikationen zu überwachen. Der bestehende MSIL Code wird um Codestellen erweitert, welche die Dynamic Parallel Checker Library aufrufen und mit Informationen beliefern. Diese Informationen verwendet der Algorithmus, um Race Conditions zu erkennen.\\ 
 \newpage
 \section{Technischer Bericht}
 \subsection{Einleitung und Übersicht}
@@ -127,14 +125,15 @@ Dieses Kapitel beinhaltet eine Beschreibung der verwendeten Konzepte und Technol
 \subsubsection{Dynamic Checker}
 \begin{flushleft}
 Um Race Conditions (sh. \ref{race_conditons}) zu erkennen, gibt es verschiedene Ansätze. Zwei davon sind, der Dynamic Checker und der Static Checker. In diesem Projekt
-wird ein Dynamic Checker entwickelt. Ein dynamic Checker hat die Aufgabe, Race Conditions zur Laufzeit (dynamic) zu erkennen. Der Static Checker
+wird ein Dynamic Checker entwickelt. Ein Dynamic Checker hat die Aufgabe, Race Conditions zur Laufzeit (dynamisch) zu erkennen. Der Static Checker
 im Gegensatz behandelt das Erkennen zur Entwicklungszeit. Um einen Dynamic Checker realisieren zu können, muss ein fertiges Programm instrumentiert werden.
-Mit Instrumentation ist gemeint, dass der Kompilierte Code angepasst wird, so dass er während der Laufzeit einen Erkennungsalgorithmus ausführen kann, jedoch nicht das Verhalten des Programms verändert.\\
+Mit Instrumentation ist gemeint, dass der kompilierte Code angepasst wird, so dass er während der Laufzeit einen Erkennungsalgorithmus ausführen kann, jedoch nicht das Verhalten des Programms verändert.\\
 Der Checker analysiert hauptsächlich Lese- und Schreibzugriffe auf Variablen. Um die Präzision zu erhöhen, müssen auch Lock/ Unlock und Thread.Start usw. ausgelesen werden.\\
-Mehr informationen dazu unter: \ref{vector_algorithm} Vector Clock Algorithmus
+Mehr Informationen dazu unter: \ref{vector_algorithm} Vector Clock Algorithmus
 \end{flushleft}
 \subsubsection{Race Condition}\label{race_conditons}
 \begin{flushleft}
+TODO: In diesem Kapitel, Ressourcen noch genauer definieren. Wir erwähnen später überall Ressourcen haben aber nirgends definiert was wir unter Ressourcen genau verstehen. (Für Dominik ;))\\
 Bei Race Conditions handelt es sich um Speicherzugriffsfehler. Diese können durch richtige synchronisation (Codeteile, in welchen nur ein Thread gleichzeitig arbeiten kann) verhindert werden. In \autoref{fig:exampleRaceCondition} wird ein Code beschrieben, welcher diese Synchronisation komplett weglässt und daher Race Conditions entstehen.
 \begin{figure}[H]
 \centering
@@ -171,11 +170,12 @@ Race Conditions wie unter \autoref{fig:exampleRaceCondition2} sind gefährlich, 
 \end{flushleft}
 \subsubsection{Vector Clock}
 \begin{flushleft}
-Die einzelnen Lese- und Schreibzugriffe in einem System können asynchron in unterschiedlichen Threads ablaufen und dadurch nicht in eine totale Ordnung gebracht werden. Um nun jedem einzelnen Zugriff einen Zeitstempel zuzuordnen verwenden wir eine Vector Clock. Diese Vector Clock wird benötigt um eine Aussage über die Nebenläufigkeit der einzelnen Zugriffe zu machen.\\
-Die Vector Clock basiert auf der Lamport's Clock von Leslie B. Lamport. Jeder Teilnehmer in einem System, in unserem Fall wären dies die einzelnen Threads, besitzt ein eigener Zeitstempel. Der eigene Zeitstempel kann unabhängig inkrementiert werden. Eine Synchronisation zwischen den Zeitstempeln der Threads findet jedoch nur statt wenn ein Synchronisationspunkt vorliegt. Ein Synchronisationspunkt ist z.B. wenn ein Thread 1 ein Lock auf ein Objekt a macht und zuvor ein anderer Thread 2 ein Unlock auf das Objekt a gemacht hat. Dadurch ist sichergestellt, dass jeder Zugriff vor dem Unlock von Thread 1 sicher vor jedem Zugriff nach dem Lock von Thread 2 stattgefunden hat. In diesem Fall wird nun der Zeitstempel von Thread 2 mit dem Zeitstempel von Thread 1 synchronisiert. Der Zeitstempel von Thread 1 bleibt wie gehabt. Mehr Informationen über die einzelnen Synchronisationspunkte finden Sie im Kapitel \ref{implementation} Implementation.\\
-Die Vector Clock erweitert die Lamport Clock nun dadurch, dass jeder Thread nicht nur einen globalen Zeitstempel besitzt sondern einen Vektor, der für jeden Thread einen eigenen Zeitstempel mitführt. D.h. jeder Thread besitzt nun einen eigenen Vektor mit den Zeitstempeln der anderen Threads. Jedoch befindet sich darin nicht der aktuelle Zeitstempel sondern der Zeitstempel der letzten Synchronisation mit dem jeweiligen Thread. Mit Hilfe der Vector Clock kann nun eine Aussage über die Nebenläufigkeit der einzelnen Lese- und Schreibzugriffe eines Thread gemacht werden.
+Die einzelnen Lese- und Schreibzugriffe in einem System können nebenläufig in unterschiedlichen Threads ablaufen und dadurch nicht in eine totale Ordnung gebracht werden. Um nun jedem einzelnen Zugriff einen Zeitstempel zuzuordnen verwenden wir eine Vector Clock. Diese Vector Clock wird benötigt, um eine Aussage über die Nebenläufigkeit der einzelnen Zugriffe zu machen.\\
+Die Vector Clock basiert auf der Lamport's Clock von Leslie B. Lamport. Jeder Teilnehmer in einem System, in unserem Fall wären dies die einzelnen Threads, besitzt ein eigener Zeitstempel. Der eigene Zeitstempel kann unabhängig inkrementiert werden. Eine Synchronisation zwischen den Zeitstempeln der Threads findet jedoch nur statt, wenn ein Synchronisationspunkt (Memory Barrier) vorliegt. Ein Synchronisationspunkt ist z.B. wenn ein Thread 1 ein Lock auf ein Objekt a macht und zuvor ein anderer Thread 2 ein Unlock auf das Objekt a gemacht hat. Dadurch ist sichergestellt, dass jeder Zugriff vor dem Unlock von Thread 1 sicher vor jedem Zugriff nach dem Lock von Thread 2 stattgefunden hat. In diesem Fall wird nun der Zeitstempel von Thread 2 mit dem Zeitstempel von Thread 1 synchronisiert. Der Zeitstempel von Thread 1 bleibt wie gehabt. Mehr Informationen über die einzelnen Synchronisationspunkte finden Sie im Kapitel \ref{implementation} Implementation.\\
+Die Vector Clock erweitert die Lamport Clock nun dadurch, dass jeder Thread nicht nur einen globalen Zeitstempel besitzt sondern einen Vektor, der für jeden Thread einen eigenen Zeitstempel mitführt. D.h. jeder Thread besitzt nun einen eigenen Vektor mit den Zeitstempeln der anderen Threads. Jedoch befindet sich darin nicht der aktuelle Zeitstempel sondern der Zeitstempel der letzten Synchronisation mit dem jeweiligen Thread. Mit Hilfe der Vector Clock können die einzelnen Lese- und Schreibzugriffe eines Thread in eine partielle Ordnung gebracht werden.
 \newpage
-Beispiel einer Vector Clock:\\
+Eine Vector Clock wie in \autoref{example_vectorclock} besteht aus einem Vektor, der Key-Value Paare beinhaltet. Der Key ist die Thread- oder TaskId und der Value ist der spezifische Werk des Zeitstempels.\\
+\begin{figure}[H]
 \[
 	\begin{pmatrix}
 		ThreadId_1 & 2\\
@@ -184,30 +184,35 @@ Beispiel einer Vector Clock:\\
 		... & ...
 	\end{pmatrix}
 \]
+\caption{Beispiel einer Vector Clock}\label{example_vectorclock}
+\end{figure}
 \end{flushleft}
 \subsubsection{Happened-Before Beziehung}
 \begin{flushleft}
-Um mit Hilfe der Vector Clock die Nebenläufigkeit von Lese- und Schreibzugriffe zu bestimmen, verwenden wir die Happened-Before Beziehung von Leslie B. Lamport. Diese Beziehung wird in der Lamport Clock und in der Vector Clock verwendet um eine partielle Ordnung innerhalb mehreren Ereignissen herzustellen. Bei neben läufigen Programmen kann keine totale Ordnung erreicht werden, daher muss mit einer partiellen Ordnung gearbeitet werden. Unserem Algorithmus genügt die partielle Ordnung soweit, da ihn lediglich die Zugriffe interessieren, die neben läufig stattgefunden haben. \\
-Die Happened-Before Beziehung vergleicht die Zeitstempel von zwei unterschiedlichen Zugriffen und kann dann eine Aussage darüber machen, ob diese nun neben läufig oder zwingend nacheinander stattgefunden haben. Folgende Eigenschaften definieren die Happened-Before Beziehung:
+Um mit Hilfe der Vector Clock die Nebenläufigkeit von Lese- und Schreibzugriffe zu bestimmen, verwenden wir die Happened-Before Beziehung von Leslie B. Lamport. Diese Beziehung wird in der Lamport Clock und in der Vector Clock verwendet, um eine partielle Ordnung innerhalb mehreren Ereignissen herzustellen. Bei nebenläufigen Programmen kann keine totale Ordnung erreicht werden, daher muss mit einer partiellen Ordnung gearbeitet werden. Unserem Algorithmus genügt die partielle Ordnung soweit, da ihn lediglich die Zugriffe interessieren, die nebenläufig stattgefunden haben. \\
+Die Happened-Before Beziehung vergleicht die Zeitstempel von zwei unterschiedlichen Zugriffen und kann dann eine Aussage darüber machen, ob diese nun nebenläufig oder zwingend nacheinander stattgefunden haben. Folgende Eigenschaften definieren die Happened-Before Beziehung:
 \begin{itemize}
-\item Auf demselben Thread oder Task: a -> b wenn die Zeit von a < b. (Zeit ist durch Vector Clock gegeben)
-\item Wenn eine Synchronisation zwischen zwei Threads oder Tasks durchgeführt wurde, dann a -> b wenn a der Thread oder Task ist von dem aus synchronisiert wird und b der Thread oder Task ist zu dem synchronisiert wird.
-\item Für drei Zugriffe mit Synchronisation a, b, c, wenn a -> b und b -> c, dann a -> c (Transitivität)
+\item Auf demselben Thread oder Task: a -> b, wenn die Zeit von a < b. (Zeit ist durch Vector Clock gegeben)
+\item Wenn eine Synchronisation zwischen zwei Threads oder Tasks durchgeführt wurde, dann a -> b, wenn a der Thread oder Task ist von dem aus synchronisiert wird und b der Thread oder Task ist zu dem synchronisiert wird.
+\item Für drei Zugriffe mit Synchronisation a, b, c. Wenn a -> b und b -> c, dann gilt a -> c (Transitivität).
 \end{itemize}
-Die Happened-Before Beziehung kann somit eine Aussage darüber machen, ob zwischen zwei unterschiedlichen Lese- oder Schreibzugriffen eine Synchronisation stattgefunden hat. Die Synchronisation zeigt, dass diese Zugriffe zwingend sequentiell abgelaufen sind und dadurch keine potenzielle Race Condition darstellen können. Die Zugriffe können folgende Beziehungen zueinander haben:\\[0.5cm]
+Die Happened-Before Beziehung kann somit eine Aussage darüber machen, ob zwischen zwei unterschiedlichen Lese- oder Schreibzugriffen eine Synchronisation stattgefunden hat. Die Synchronisation zeigt, dass diese Zugriffe zwingend sequentiell abgelaufen sind und dadurch keine potenzielle Data Race darstellen können. Die Zugriffe können folgende Beziehungen zueinander haben:\\[0.5cm]
 \textbf{ Happened Before}\\[0.2cm]
 \end{flushleft}
+\begin{figure}[H]
 \begin{center}
 \begin{tabular}{ c c }
   (x1, x2, x3, ...) -> (y1, y2, y3, ...) \\
-  y1 >= x1 \\
+  y1 > x1 \\
   y2 >= x2 \\
   y3 >= x3 \\
-  ... >= ... \\[0.2cm]
-\end{tabular}
+  ... >= ...
+  \end{tabular}
 \end{center}
+\caption{Beispiel Happened-Before Beziehung}\label{example_happenedbefore}
+\end{figure}
 \begin{flushleft}
-Der Zeitstempel eines Threads 1 in einer Vector Clock ist grösser oder gleich (>=) dem Zeitstempel des selben Threads 1 in der Vector Clock von Thread 2. Mindestens eine Komponente der gesamten Vector Clock muss aber echt grösser (>) sein als in der anderen Vector Clock. In dieser Beziehung hat sicher eine Synchronisation zwischen den beiden Threads 1 und 2 stattgefunden und dadurch sind diese beiden Zugriffe keine potenzielle Race Condition.\\
+Die Happened-Before Beziehung in \autoref{example_happenedbefore} ist wie folgt definiert: Der Zeitstempel eines Threads 1 in einer Vector Clock ist grösser oder gleich (>=) dem Zeitstempel des selben Threads 1 in der Vector Clock von Thread 2. Mindestens eine Komponente der gesamten Vector Clock muss aber echt grösser (>) sein als in der anderen Vector Clock. In dieser Beziehung hat sicher eine Synchronisation zwischen den beiden Threads 1 und 2 stattgefunden und dadurch sind diese beiden Zugriffe keine potenzielle Race Condition.\\
 Beispiel (T1 happened before T2):\\
 \[
 	T1 = \begin{pmatrix}
@@ -221,8 +226,8 @@ Beispiel (T1 happened before T2):\\
 \]
 \\[0.5cm]
 \textbf{Concurrent}\\[0.2cm]
-Concurrent bedeutet, dass zwischen zwei Zugriffen auf zwei unterschiedlichen Threads keine Synchronisation durch z.B. einen Lock geschah. Diese Zugriffe können eine potentielle Race Condition darstellen, falls sie auf die selbe Ressource zugegriffen haben.\\
-Sollten also beim Vergleich der Vector Clocks von zwei Zugriffen nicht alle Elemente aus Vektor 1 grösser gleich (>=) oder alle Elemente kleiner gleich (<=) sein wie das dazugehörige Element im Vektor 2, passierten diese Zugriffe neben läufig. Mit anderen Worten, wenn die erste Definition von "Happened-Before" auf die Vector Clocks nicht angewendet werden kann. Unser Algorithmus interessiert sich genau für diese Zugriffspaare und daher ist die Happened-Before Beziehung zentral für das Funktionieren des Algorithmus. \\
+Concurrent (Nebenläufig) bedeutet, dass zwischen zwei Zugriffen auf zwei unterschiedlichen Threads keine Synchronisation durch z.B. einen Lock geschah. Diese Zugriffe können eine potentielle Race Condition darstellen, falls sie auf die selbe Ressource zugegriffen haben.\\
+Sollten also beim Vergleich der Vector Clocks von zwei Zugriffen nicht alle Elemente aus Vektor 1 grösser gleich (>=) und mindestens eines echt grösser (>), oder kleiner gleich (<=) und mindestens eines echt kleiner (<) sein wie das dazugehörige Element im Vektor 2, passierten diese Zugriffe nebenläufig. Mit anderen Worten, wenn die erste Definition von "Happened-Before" auf die Vector Clocks nicht angewendet werden kann. Unser Algorithmus interessiert sich genau für diese Zugriffspaare und daher ist die Happened-Before Beziehung zentral für das Funktionieren des Algorithmus. \\
 Beispiel:\\
 \[
 	T1 = \begin{pmatrix}
@@ -343,18 +348,18 @@ IL_0030:  stsfld     object TestProgram.Program::_a
 \end{flushleft}
 \subsubsection{Vector Clock pro Thread}
 \begin{flushleft}
-Die Vector Clock eignet sich optimal for die History des Dynamic Parallel Checkers. Jeder Thread erhält seine eigene Vektor Clock, in der er die Zeitstempel der anderen Threads mitführt. Es wird nicht der aktuelle Zeitstempel mitgeführt, sondern der Zeitstempel der bei der letzten direkten oder indirekten Synchronisation mit diesem Thread von diesem Thread mitgeliefert wurde. Bei einem Synchronisationspunkt wird die Vector Clock mit der Vector Clock aus der Lock-History synchronisiert. (sh. \ref{lock_history}) Die Reihenfolge der Synchronisation ist jedoch nicht deterministisch und hängt vom Scheduler ab.\\
-Unser Algorithmus verwendet die Vector Clock des aktuellen Threads um diese mit den Vector Clocks der History der anderen Threads zu vergleichen, um herauszufinden welche Zugriffe neben läufig zu dem aktuellen Zugriff stattgefunden haben. Daher ist es sehr wichtig, dass jeder Thread seine eigene Vector Clock hat.
+Die Vector Clock eignet sich optimal für die History des Dynamic Parallel Checkers. Jeder Thread erhält seine eigene Vektor Clock, in der er die Zeitstempel der anderen Threads mitführt. Es wird nicht der aktuelle Zeitstempel mitgeführt, sondern der Zeitstempel der bei der letzten direkten oder indirekten Synchronisation mit diesem Thread mitgeliefert wurde. Bei einem Synchronisationspunkt wird die Vector Clock mit der Vector Clock aus der Lock-History synchronisiert (sh. \ref{lock_history}). Die Reihenfolge der Synchronisation ist jedoch nicht deterministisch und hängt vom Thread-Scheduler ab.\\
+Unser Algorithmus verwendet die Vector Clock des aktuellen Threads, um diese mit den Vector Clocks der History der anderen Threads zu vergleichen. Dadurch kann in Erfahrung gebracht werden, welche Zugriffe nebenläufig zu dem aktuellen Zugriff stattgefunden haben. Dies zeigt die Notwendigkeit, dass jeder Thread seine eigene Vector Clock hat.
 \end{flushleft}
 \subsubsection{Lock-History}\label{lock_history}
 \begin{flushleft}
-Während der kompletten Überwachung wird eine Lock-History (\autoref{example_lockHistory}) geführt. Diese beinhaltet die Information welcher Thread auf welche Ressource zu welcher Zeit (Vector Clock) einen Lock durchgeführt hat. Diese Information wird benötigt um z.B. eine Synchronisation zwischen dem Thread, der den letzten Unlock auf eine Ressource durchgeführt hat, mit dem aktuellen Thread, der nun einen Lock auf die selbe Ressource durchführen möchte, vorzunehmen. Bei jedem Unlock wird ein neuer Lock-History Eintrag erstellt, falls noch keiner vorhanden ist. Sollte jedoch bereits einer vorhanden sein, wird dieser einfach überschrieben.\\
+Während der kompletten Überwachung wird eine Lock-History (\autoref{example_lockHistory}) geführt. Diese beinhaltet die Information, welcher Thread zuletzt auf welche Ressource zu welcher Zeit (Vector Clock) einen Lock durchgeführt hat. Diese Information wird benötigt um z.B. eine Synchronisation zwischen dem Thread, der den letzten Unlock auf eine Ressource durchgeführt hat, mit dem aktuellen Thread, der nun einen Lock auf die selbe Ressource durchführen möchte, vorzunehmen. Bei jedem Unlock wird ein neuer Lock-History Eintrag erstellt, falls noch keiner vorhanden ist. Sollte jedoch bereits einer vorhanden sein, wird dieser einfach überschrieben.\\
 \end{flushleft}
 \begin{figure}[H]
 \begin{center}
 \textbf{\textit{Lock-History:}}\\[0.5cm]
 \begin{tabular}{ c c c }
-  Vektor & Ressource & ThreadNr \\\hline
+  Vektor & Ressource & ThreadId \\\hline
   (2,1,0) & locka & 1 \\
   (0,1,0) & lockb & 2 \\\hline\\
 \end{tabular}
@@ -363,11 +368,11 @@ Während der kompletten Überwachung wird eine Lock-History (\autoref{example_lo
 \end{figure}
 \textbf{Synchronisation der Vector Clock}
 \begin{flushleft}
-Wenn z.B. im Beispielprogramm (\autoref{basic_example}) Thread1 (T1) vor Thread3 (T3) in den Lock(a) Bereich kommt, schreibt er beim Verlassen des gesicherten Bereichs einen Eintrag in die Lock-History. Wenn nun T3 den Lock(a) beziehen möchte, prüft der Algorithmus zuerst, ob ein Eintrag in der Lock-History vorhanden ist. Ist die der Fall, wird die eigene Vector Cock (a3, b3, c3) mit der Vector Clock des History Eintrags (a1, b1, c1) synchronisiert. (\autoref{example_vectorClockSync})\\
+Wenn z.B. im Beispielprogramm (\autoref{basic_example}) Thread1 (T1) vor Thread3 (T3) in den Lock(a) Bereich kommt, schreibt er beim Verlassen des gesicherten Bereichs einen Eintrag in die Lock-History. Wenn nun T3 den Lock(a) beziehen möchte, prüft der Algorithmus zuerst, ob ein Eintrag in der Lock-History vorhanden ist. Ist die der Fall, wird die eigene Vector Cock (a3, b3, c3) mit der Vector Clock des History Eintrags (a1, b1, c1) synchronisiert (\autoref{example_vectorClockSync}).\\
 \newpage
 Vorgehensweise bei der Synchronisation:
 \begin{itemize}
-\item Bei jeder ThreadId oder TaskId, die in den beiden Vector Clock vorkommt, wird der grössere Wert aus beiden Vector Clocks verwendet. z.B. MAX(a1, a2)
+\item Bei jeder ThreadId oder TaskId (sh. \ref{chapter_taskthread}), die in den beiden Vector Clocks vorkommt, wird der grössere Wert aus beiden Vector Clocks verwendet. z.B. MAX(a1, a2)
 \item Die synchronisierende Vector Clock inkrementiert den Wert der eigenen ThreadId oder TaskId. z.B. MAX(c1, c3) + 1
 \end{itemize}
 \begin{figure}[H]
@@ -399,15 +404,15 @@ Handelt es sich bei dem Ereignis im einen Lock auf eine Ressource, wird das Abla
 	\includegraphics[width=14cm,height=5.5cm,trim=70mm 110mm 70mm 5mm, clip]{images/Lock.pdf}
 \caption{Algorithmus - Lock}\label{algo_lock}
 \end{figure}
-Handelt es sich bei dem Ereignis um einen Unlock auf eine Ressource, wird das Ablaufdiagramm in \autoref{algo_unlock} durchlaufen. Es wird sichergestellt, dass die aktuelle Vector Clock zu der Ressource in die Lock-History geschrieben wird. Dabei wird überprüft, ob bereits ein Eintrag zu dieser Ressource in der Lock-History vorhanden ist. Wenn ja, wird dieser mit der neuen Zeit und der ThreadId oder TaskId überschrieben. Falls kein Eintrag vorhanden ist wird ein Neuer erstellt. Zudem wird der eigene Wert in der Vector Clock des aktuellen Threads oder Tasks inkrementiert. Dies dient dazu, dass beim nächsten Auftreten eines Locks auf dieselbe Ressource, nach der Synchronisation, die Happened-Before Beziehung gilt. \\
+Handelt es sich bei dem Ereignis um einen Unlock auf eine Ressource, wird das Ablaufdiagramm in \autoref{algo_unlock} durchlaufen. Es wird sichergestellt, dass die aktuelle Vector Clock zu der Ressource in die Lock-History geschrieben wird. Dabei wird überprüft, ob bereits ein Eintrag zu dieser Ressource in der Lock-History vorhanden ist. Wenn ja, wird dieser mit der neuen Zeit und der ThreadId oder TaskId überschrieben. Falls kein Eintrag vorhanden ist, wird ein neuer erstellt. Zudem wird der eigene Wert in der Vector Clock des aktuellen Threads oder Tasks inkrementiert. Dies dient dazu, dass beim nächsten Auftreten eines Locks auf dieselbe Ressource, nach der Synchronisation, die Happened-Before Beziehung gilt. \\
 \begin{figure}[H]
 \centering
 	\includegraphics[width=12cm,height=5.5cm,trim=70mm 106mm 100mm 8mm, clip]{images/Unlock.pdf}
 \caption{Algorithmus - Unlock}\label{algo_unlock}
 \end{figure}
-Handelt es sich bei dem Ereignis um einen Lese- oder Schreibzugriff auf eine Ressource, wird das Ablaufdiagramm in \autoref{algo_readwrite} durchlaufen. Zuerst wird das Ereignis in die Program-History des aktuellen Threads oder Tasks abgelegt. Sollte während der selben Vector Clock Zeit, im aktuellen Thread, bereits ein Zugriff auf diese Ressource stattgefunden haben, wird der Zugriffstyp (Read oder Write) aktualisiert. Solange nur Lesezugriffe stattgefunden haben ist der Zugriffstyp immer "Read". Sobald jedoch ein Schreibzugriff stattgefunden hat wird dieser Typ auf "Write" geändert und wird nie mehr den Type "Read" erhalten. Dadurch wurde die Datenstruktur optimiert.\\
-Anschliessend wird das aktuelle Ereignis auf Race Conditions geprüft. Dafür benötigt unser Algorithmus alle Zugriffe, von den anderen Threads oder Tasks, die neben läufig zu dem aktuellen Zugriff aufgetreten sind. Dies kann mit Hilfe der Happened-Before Beziehung überprüft werden. In einem dynamischen Checker hat das Scheduling einen grossen Einfluss auf die Reihenfolge der einzelnen Zugriffe und kann dadurch die Happened-Before Beziehungen zwischen zwei Zugriffen ändern.\\
-Hat einer dieser neben läufigen Zugriffe auf die selbe Ressource zugegriffen, wird überprüft ob es sich dabei um eine Race Condition handelt. Mehr Informationen zu Race Conditions in Kapitel \ref{race_conditons}. Sollte eine Race Condition erkannt werden, wird diese mit Hilfe des Logging Frameworks NLog an die WPF Applikation gemeldet und dem Benutzer angezeigt.
+Handelt es sich bei dem Ereignis um einen Lese- oder Schreibzugriff auf eine Ressource, wird das Ablaufdiagramm in \autoref{algo_readwrite} durchlaufen. Zuerst wird das Ereignis in die Programm-History des aktuellen Threads oder Tasks abgelegt. Sollte während der selben Vector Clock Zeit im aktuellen Thread bereits ein Zugriff auf diese Ressource stattgefunden haben, wird der Zugriffstyp (Read oder Write) aktualisiert. Solange nur Lesezugriffe stattgefunden haben, ist der Zugriffstyp immer "Read". Sobald jedoch ein Schreibzugriff stattgefunden hat, wird dieser Typ auf "Write" geändert und wird nie mehr den Type "Read" erhalten. Dadurch werden die Zugriffe pro Zeitabschnitt eines Threads zusammengefasst und die Datenstruktur optimiert.\\
+Anschliessend wird das aktuelle Ereignis auf Race Conditions geprüft. Dafür benötigt unser Algorithmus alle Zugriffe, von den anderen Threads oder Tasks, die nebenläufig zu dem aktuellen Zugriff aufgetreten sind. Dies kann mit Hilfe der Happened-Before Beziehung überprüft werden. In einem dynamischen Checker hat das Scheduling einen grossen Einfluss auf die Reihenfolge der einzelnen Zugriffe und kann dadurch die Happened-Before Beziehungen zwischen zwei Zugriffen ändern.\\
+Hat einer dieser nebenläufigen Zugriffe auf die selbe Ressource zugegriffen, wird überprüft, ob es sich dabei um eine Race Condition handelt. Mehr Informationen zu Race Conditions in Kapitel \ref{race_conditons}. Sollte eine Race Condition erkannt werden, wird diese mit Hilfe des Logging Frameworks NLog an die WPF Applikation gemeldet und dem Benutzer angezeigt.
 \begin{figure}[H]
 \centering
 	\includegraphics[width=5cm,height=5.5cm,trim=70mm 108mm 200mm 7mm, clip]{images/ReadWrite.pdf}
@@ -686,7 +691,7 @@ In diesem Kapitel wird der Algorithmus auf das Beispielprogramm  in \autoref{bas
 TODO\\
 \subsection{Performance}
 \subsection{Technische Findings}
-\subsubsection{Task/Threads}
+\subsubsection{Task/Threads}\label{chapter_taskthread}
 \begin{flushleft}
 Das .Net Framework von Microsoft kennt zwei asynchrone Operationstypen. Task oder Threads. Der Unterschied dieser zwei Typen liegt auf der Ausführungsumgebung. Threads werden direkt gestartet und vom Prozessor parallel verarbeitet. Task wurden zusammen mit der Task Parallel Library eingeführt. Dieser Typ wird nicht direkt ausgeführt, sondern in eine Queue geladen und dann von Worker Threads berechnet. Die Worker Threads werden vom .Net Framework automatisch gestartet. Die Anzahl wird durch die Laufzeitumgebung bestimmt, z.B. wie viele Kernen der Prozessor hat. Der Vorteil dieser Methode gegenüber der Threads ist es, das die Belastung auf den Arbeitsspeicher und Prozessor bei vielen parallelen Vorgängen optimiert und gesenkt wird. Der Nachteil ist, das es schneller zu Deadlocks kommen kann, wenn die Threads untereinander abhängig sind.\\
 Für die Entwicklung des Dynamic Parallel Checker ist der Unterschied zwischen Task und Threads dahingehend wichtig, da die ID des Threads bei Tasks der ID des Worker Thread entspricht. Um den Detailgrad der Erkennung zu erhöhen, wurde bei Tasks die Task ID und nicht die Thread ID für die Erkennung verwendet.
@@ -767,11 +772,11 @@ Um die Erkennungsrate des Algorithmus erhöhen zu können, müssen Tools mehrmal
 \let\oldsection=\section
 \renewcommand{\section}[2]{}
 \begin{thebibliography}{xxxxxxxxxxxxx}
+\bibitem[ACSC, 1988]{acsc}"Timestamps in Message-Passing Systems That Preserve the Partial Ordering", \href{http://zoo.cs.yale.edu/classes/cs426/2012/lab/bib/fidge88timestamps.pdf}{http://zoo.cs.yale.edu/classes/cs426/2012/lab/bib/fidge88timestamps.pdf}, 02.1988
 \bibitem[ECMA, 2012]{ecma}"Standard ECMA-335 Common Language Infrastructure (CLI)", \href{http://www.ecma-international.org/publications/standards/Ecma-335.htm}{http://www.ecma-international.org/publications/standards/Ecma-335.htm}, 06.2012
 \bibitem[MCA, 1978]{MCA}"Time, Clocks, and the Ordering of Events in a Distributed System", \href{http://research.microsoft.com/en-us/um/people/lamport/pubs/time-clocks.pdf}{http://research.microsoft.com/en-us/um/people/lamport/pubs/time-clocks.pdf}, 07.1978
-\bibitem[ACSC, 1988]{acsc}"Timestamps in Message-Passing Systems That Preserve the Partial Ordering", \href{http://zoo.cs.yale.edu/classes/cs426/2012/lab/bib/fidge88timestamps.pdf}{http://zoo.cs.yale.edu/classes/cs426/2012/lab/bib/fidge88timestamps.pdf}, 02.1988
-\bibitem[MSDN, 2015]{msdn}"MSDN - Memory Management and Garbage Collection", \href{https://msdn.microsoft.com/de-de/library/0xy59wtx(v=vs.110).aspx}{https://msdn.microsoft.com/de-de/library/0xy59wtx(v=vs.110).aspx}, 08.2012
 \bibitem[MONO, 2015]{monocecil}"Mono.Cecil Library",\\ \href{http://www.mono-project.com/docs/tools+libraries/libraries/Mono.Cecil/}{http://www.mono-project.com/docs/tools+libraries/libraries/Mono.Cecil/}, 12.2015
+\bibitem[MSDN, 2015]{msdn}"MSDN - Memory Management and Garbage Collection", \href{https://msdn.microsoft.com/de-de/library/0xy59wtx(v=vs.110).aspx}{https://msdn.microsoft.com/de-de/library/0xy59wtx(v=vs.110).aspx}, 12.2015
 \end{thebibliography}
 \let\section=\oldsection
 \section*{Anhang}
