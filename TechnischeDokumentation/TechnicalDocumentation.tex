@@ -690,6 +690,47 @@ In diesem Kapitel wird der Algorithmus auf das Beispielprogramm  in \autoref{bas
 \section{Schlussfolgerungen}
 TODO\\
 \subsection{Performance}
+\subsubsection{Testvorgang}
+\begin{flushleft}
+Im Rahmen des Projektabschluss wurde der Dynamic Parallel Checker einigen Performance Tests ausgesetzt. Dabei wurden Tools gesucht welche mit .Net programmiert wurden. Die Messungen zeigten starke Differenzen in der Performance des Checkers auf.
+\subsubsection*{Testfall 1: TestTool}
+Dieses Tool wurde im Rahmen des Projekt für das Testen des Algorithmus entwickelt. Es handelt sich um eine Console-Application, welche verschiedene synchrone und asynchrone Read/Writes durchführt.\\
+\subsubsection*{Resultat}
+\begin{tabular}{|c|c|}
+\hline 
+Ohne DPC & Mit DPC \\ 
+\hline 
+ca. 70ms & ca. 205ms \\ 
+\hline 
+\end{tabular} 
+Faktor 2.9x\\[0.4cm]
+Das Resultat zeigt einen moderaten Anstieg der Verarbeitungszeit. In der Analyse zeigt sich in diesem Testfall, dass das TestTool wenige komplexe asynchrone Verarbeitungen durchführt. Daher werden wenige Vector Clocks erfasst und berechnet. Da das Tool vor allem aus Code besteht, welcher instrumentiert werden muss, ist die Grösse des Tools von 18KB ohne Instrumentierung auf 32KB angestiegen
+\subsubsection*{Testfall 2: Tic-Tac-Toe}
+Um die Performance des Algorithmus mit vielen Read/Writes im synchronen Ablauf zu testen, wurde ein Tic-Tac-Toe Spiel gefunden und getestet. Da der Code rein synchron ist, werden wenige Vector Clocks generiert. Getestet wurde der Vorgang in welchem der Computergegner versucht den besten Zug zu evaluieren und durchzuführen. Dieser Vorgang ist stark rekursiv und führt zu vielen Read / Writes\\
+\subsubsection*{Resultat}
+ \begin{tabular}{|c|c|}
+\hline 
+Ohne DPC & Mit DPC \\ 
+\hline 
+ca. 80ms & ca. 833715ms \\ 
+\hline 
+\end{tabular} 
+Faktor 10421x\\[0.4cm]
+Die Analyse des Resultats zeigt auf, das der extreme Performanceverlust dadurch entsteht, das das Tic-Tac-Toe Spiel durch ineinander verschachtelte For-Schleifen, welche in jedem Durchgang eine Rekursion starten, mit weiteren verschachtelten For-Schleifen, zu hohen Read/Write zahlen führen. Als Test wurden die Rekursionen eingeschränkt. Dadurch zeigte sich ein exponentieller Anstieg der Verarbeitungszeit durch die Rekursionen.
+\subsubsection*{Testfall 3: Parallel File Search}
+Das Tool Parallel File Search wurde als Testfall evaluiert, da in diesem Tool durch verschachtelte "Parrallel.Foreach" viele Tasks gestartet werden. Die einzelnen Tasks besitzen wenig Read/Writes. Jedoch durch die Anzahl Tasks (für jeden Ordner im Filesystem wird ein Task gestartet) muss der Algorithmus viele Vector Clocks (für jeden Task eine Vector Clock) erstellen. Im Test wurden 358 Ordner überprüft.
+\subsubsection*{Resultat}
+\begin{tabular}{|c|c|}
+\hline 
+Ohne DPC & Mit DPC \\ 
+\hline 
+ca. 26ms & ca. 36992ms \\ 
+\hline 
+\end{tabular} 
+Faktor 1422x\\[0.4cm]
+In der Analyse zeigt sich, das der Parallel File Search viele Tasks startet. Diese müssen als Vector Clock erfasst werden und mit allen anderen überprüft werden. Dadurch steigt der Aufwand des Algorithmus mit der Anzahl Thread/Tasks an.
+\end{flushleft}
+\subsubsection{Schlussfolgerung Performance}
 \subsection{Technische Findings}
 \subsubsection{Task/Threads}\label{chapter_taskthread}
 \begin{flushleft}
