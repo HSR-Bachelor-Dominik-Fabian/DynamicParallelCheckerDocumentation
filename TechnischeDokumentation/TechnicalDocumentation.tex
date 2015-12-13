@@ -134,7 +134,7 @@ Mehr Informationen dazu unter: \ref{vector_algorithm} Vector Clock Algorithmus
 \subsubsection{Race Condition}\label{race_conditons}
 \begin{flushleft}
 TODO: In diesem Kapitel, Ressourcen noch genauer definieren. Wir erwähnen später überall Ressourcen haben aber nirgends definiert was wir unter Ressourcen genau verstehen. (Für Dominik ;))\\
-Bei Race Conditions handelt es sich um Speicherzugriffsfehler. Diese können durch richtige synchronisation (Codeteile, in welchen nur ein Thread gleichzeitig arbeiten kann) verhindert werden. In \autoref{fig:exampleRaceCondition} wird ein Code beschrieben, welcher diese Synchronisation komplett weglässt und daher Race Conditions entstehen.
+Bei Race Conditions handelt es sich um Speicherzugriffsfehler. Diese können durch richtige Synchronisation (z.B. mit Warten auf Beendigung des anderen Thread, oder durch Zustandsüberwachung) verhindert werden. In \autoref{fig:exampleRaceCondition} wird ein Code beschrieben, welcher diese Synchronisation komplett weglässt und daher Data Races entstehen.
 \begin{figure}[H]
 \centering
 \begin{tabular}{|cc|}
@@ -148,7 +148,7 @@ Konto + 200 & Konto - 100 \\
 \caption[Beispiel Race Condition]{Ein unsynchronisierter Zugriff auf ein Konto}
 \label{fig:exampleRaceCondition}
 \end{figure}
-Wenn zwei Threads den Code unter \autoref{fig:exampleRaceCondition} parallel ausführen, ist nicht deterministisch welcher Thread wann durchgeführt wird. Die Situation in \autoref{fig:exampleRaceCondition2} kann dadurch entstehen. Dabei erfährt der zweite Thread nicht, das der erste Thread den Wert angepasst hat und überschreibt den Wert mit seinen falschen Daten.\\\newpage
+Wenn zwei Threads den Code unter \autoref{fig:exampleRaceCondition} neben läufig ausführen, ist nicht deterministisch, wie die Threads zueinander verzahnt oder gleichzeitig laufen. Die Situation in \autoref{fig:exampleRaceCondition2} kann dadurch entstehen. Der zweite Thread registriert die Änderungen des ersten Thread nicht und überschreibt daher den Speicherwert mit den falschen Daten.\\
 \begin{figure}[H]
 \centering
 \begin{tabular}{|cc|}
@@ -240,12 +240,12 @@ Beispiel:\\
 	\end{pmatrix}
 \]
 \\[0.5cm]
-\end{flushleft}
+\end{flushleft}\newpage
 \subsubsection{Microsoft IL Code}\label{chapter_IL}
 \begin{flushleft}
-Der Microsoft IL (Intermediate Language) Code wird verwendet um einen Zwischencode, zwischen dem Compiler und dem Prozessor zu bilden. Da der IL Code vereinheitlicht definiert ist, ist er unabhängig vom verwendeten Prozessor. In diesem Zustand wird das Programm zum Kunden ausgeliefert und erst auf der Maschine dur einen JIT (Just in Time) Compiler zur Laufzeit kompiliert. Dieses Verfahren besitzt den Vorteil, dass der Code auf das jeweilige System abgestimmt wird und dadurch die Funktionen des Prozessors optimal ausnützt. Der Nachteil ist jedoch der Performanceverlust, da jede Methode vor dem Ausführen noch kompiliert werden muss.\\
-Für die Instrumentation, welche für den Dynamic Parallel Checker verwendet wird, ist der IL Code ideal, da er vereinheitlicht ist und daher nur eine Implementation entwickelt werden muss, welche für alle .Net Sprachen, sowie jedes Laufzeitsystem welches .Net unterstützt funktioniert.\newpage
-Der MSIL Code ist Stack-basiert. Dies bedeutet das alle Operationen auf einem Stack durchgeführt werden, welcher nach dem LIFO Prinzip (Last In, First Out) arbeitet. Der Stack wird dazu verwendet die Werte vorzubereiten, zu verarbeiten und wieder vom Stack abzubauen. \autoref{example_stack} zeigt wie eine Operation durchgeführt wird und in welchen Schritten die Parameter auf dem Stack vorbereitet werden müssen\\
+Der Microsoft IL (Intermediate Language) Code (siehe auch: \cite{ecma}) wird verwendet, um einen sprach- und plattformunabhängigen Zwischencode zwischen dem Compiler und dem Prozessor zu bilden. Da der IL Code vereinheitlicht definiert ist, ist er unabhängig von der verwendeten Hardware. In diesem Zustand wird das Programm zum Kunden ausgeliefert und erst auf der Maschine durch einen JIT (Just in Time) Compiler zur Laufzeit kompiliert. Dieses Verfahren besitzt den Vorteil, dass der Code auf das jeweilige System abgestimmt wird und dadurch die Funktionen des Prozessors optimal ausnützt. Der Nachteil ist jedoch der Performanceverlust, da jede Methode vor dem Ausführen noch kompiliert werden muss.\\
+Für die Instrumentation, welche für den Dynamic Parallel Checker verwendet wird, ist der IL Code ideal, da er vereinheitlicht ist und daher nur eine Implementation entwickelt werden muss, welche für alle .NET Sprachen, sowie jedes Laufzeitsystem welches die .NET Runtime unterstützt funktioniert.\\
+Der MSIL Code ist Stack-basiert. Dies bedeutet das alle Operationen auf einem Stack nach dem LIFO Prinzip (Last In, First Out) durchgeführt werden. Der Stack wird dazu verwendet, die Werte vorzubereiten, zu verarbeiten und wieder vom Stack abzubauen. \autoref{example_stack} zeigt, wie eine Operation durchgeführt wird und in welchen Schritten die Parameter auf dem Stack vorbereitet werden müssen.\\
 \begin{figure}[H]
 \centering
 \includegraphics[scale=0.5]{images/BeispielStack.png}
@@ -256,15 +256,44 @@ Eine Instruktion im MSIL Code setzt sich jeweils aus einem OpCode und einem Oper
 \begin{lstlisting}
 ldsflda    class TestProgram.NewObject TestProgram.Program::_obj1
 \end{lstlisting}
-In diesem Beispiel eines IL Code ist "ldsflda" der OpCode und "class TestProgram.NewObject TestProgram.Program::\_obj1" der Operand. Der OpCode (Operation Code) identifiziert was die Operation durchführen soll. Hier "ldsflda" (Load Static Field Address). Dabei wird vom Operand definierten Static Field die Speicheradresse ausgelesen und auf den Stack gelegt. Der Operand ist daher jeweils die Ressource welche für den OpCode verwendet wird. Der Typ des Operand ist durch den OpCode definiert.\\
+In diesem Beispiel eines IL Code ist "ldsflda" der OpCode und "class TestProgram.NewObject TestProgram.Program::\_obj1" der Operand. Der OpCode (Operation Code) identifiziert was die Operation durchführen soll. Hier "ldsflda" (Load Static Field Address). Dabei wird vom Operand definierten Static Field die Speicheradresse ausgelesen und auf den Stack gelegt. Der Operand ist daher jeweils die Ressource, welche für den OpCode verwendet wird. Der Typ des Operand ist durch den OpCode definiert.\\
 Um erfolgreich den Source Code für den Dynamic Parallel Checker zu instrumentieren (sh. \autoref{example_injection}), muss der Aufbau des Stacks immer sichergestellt werden. Daher müssen Werte um Sie aus dem Stack herauszulesen, immer dupliziert werden, damit das Programm erfolgreich durchgeführt werden kann.\\
 \begin{figure}[H]
 \centering
 \includegraphics[scale=0.5]{images/BeispielInjection.png}
-\caption{Beispiel Code Injection, Stack Verhalten}
+\caption{Beispiel Code Instrumentation, Stack Verhalten}
 \label{example_injection}
 \end{figure}
-In \autoref{example_injection} ist ein Beispiel dargestellt, wie eine Injection den Stack verwaltet und dabei die benötigte Information "obj" aus dem Stack extrahiert und den Ursprungszustand wiederherstellt. Da bei einem LIFO Stack nur auf das oberste Element zugegriffen werden kann, wird der Top-Wert "value" in eine lokale Variable gespeichert. Nach dem Abbau des duplizieren "obj" wird der Wert wieder aus der Variable auf den Stack gelegt.
+In \autoref{example_injection} ist ein Beispiel dargestellt, wie eine Instrumentation den Stack verwaltet und dabei die benötigte Information "obj" aus dem Stack extrahiert und den Ursprungszustand wiederherstellt. Da bei einem LIFO Stack nur auf das oberste Element zugegriffen werden kann, wird der Top-Wert "value" in eine lokale Variable gespeichert. Nach dem Abbau des duplizieren "obj" wird der Wert wieder aus der Variable auf den Stack gelegt.
+\end{flushleft}
+\subsubsection{Instrumentation}
+\begin{flushleft}
+Für die Durchführung des Vector Clock Algorithmus (sh. Kapitel \ref{vector_algorithm}) ist es wichtig die Informationen über Lese- / Schreibzugriffe sowie Locks und Thread.Starts zu erhalten. Dazu muss der bestehende IL Code angepasst (instrumentiert) werden, damit er diese Informationen preisgibt. Dazu wird der Code analysiert und an Stellen mit wichtigen Zugriffen um Code erweitert. Wie in Kapitel \ref{chapter_IL} bereits beschrieben muss dabei der korrekte Aufbau des Stack jederzeit sichergestellt werden. Für die Instrumentation des Codes wird die Library Mono.Cecil aus dem Mono Projekt verwendet \cite{monocecil}. Die Library erlaubt es den IL Code zu lesen und zu bearbeiten. 
+\begin{figure}[H]
+\centering
+\begin{lstlisting}[language=CIL,backgroundcolor=\color{backcolor}]
+IL_001a:  box        [mscorlib]System.Int32
+IL_001f:  stsfld     object TestProgram.Program::_a
+\end{lstlisting}
+\caption{Beispiel ohne Instrumentation}\label{example_codeWithoutInstrum}
+\end{figure}
+\autoref{example_codeWithoutInstrum} zeigt ein Beispiel, eines typischen Schreibzugriff im MS IL. Der Befehl "box" führt ein Boxing eines Integers durch. Dabei wird der Integerwert von einem Valuetype zu einem Referenztyp umgebaut. Auf dem Stack liegt nach dem Boxing die Adresse des Integer-Werts. Diese Adresse wird dann verwendet um den Wert in die Variable "\_a" mit dem Befehl "stsfld"(Store Static Field) zu speichern.\\
+\begin{figure}[H]
+\centering
+\begin{lstlisting}[language=CIL,backgroundcolor=\color{backcolor}]
+IL_001a:  box        [mscorlib]System.Int32
+//----------Instrumented Code...----------------
+IL_001f:  ldsflda    object TestProgram.Program::_a
+IL_0024:  ldc.i4.s   31
+IL_0026:  ldstr      "System.Void TestProgram.Program::Test()"
+IL_002b:  call       void [DPCLibrary]DPCLibrary.DpcLibrary::
+                                 WriteAccess(int32,int32,string)
+//----------...End Instrumentation--------------
+IL_0030:  stsfld     object TestProgram.Program::_a
+\end{lstlisting}
+\caption{Instrumentierter IL Code}\label{example_instrumentedCode}
+\end{figure}
+\autoref{example_instrumentedCode} zeigt den Code nach dem der Dynamic Parallel Checker diesen instrumentiert hat. Wie in \autoref{example_codeWithoutInstrum}, startet der Code mit "box" und endet mit "stsfld". Dazwischen wurde der Code um den Dynamic Parallel Checker erweitert. Um zu wissen, auf welche Variable der Schreibzugriff durchgeführt wird, wird mit "ldsflda" (Load static Field Address) die Adresse der Ressource ausgelesen und auf den Stack gelegt. Danach wird die Zeilennummer des Schreibzugriff auf den Stack gelegt (Man beachte: Die Zeilennummer zeigt die Zeile vor der Instrumentation), um bei einem Fehler aufzuzeigen, welche Codezeilen diesen verursacht haben. Daher wird auch als nächstes der Methodennamen als String auf den Stack gelegt. Als letzte instrumentierte Zeile werden dann die Informationen an den Dynamic Parallel Checker übergeben. Dies wird mit der Methode "WriteAccess(int32,int32,string)" durchgeführt. Nach dem Instrumentierten Code hat der Stack wieder den gleichen Zustand wie nach dem "Box" Befehl in \autoref{example_codeWithoutInstrum}.
 \end{flushleft}
 \subsection{Implementation}\label{implementation}
 In diesem Kapitel wird die Implementation des Dynamic Prallel Checker genauer erklärt. Unter \ref{example} ist das Beispiel beschrieben an welchem, in den folgenden Kapitel, die Funktion des Dynamic Parallel Checkers beschrieben wird. Der Dynamic Parallel Checker wurde mit C\#.Net entwickelt.
@@ -317,35 +346,6 @@ Da der Code in \autoref{basic_example} asynchron durchgeführt wird, werden die 
 \end{figure}
 \end{flushleft}
 \newpage
-\subsubsection{Instrumentation}
-\begin{flushleft}
-Für die Durchführung des Vector Clock Algorithmus (sh. Kapitel \ref{vector_algorithm}) ist es wichtig die Informationen über Lese- / Schreibzugriffe sowie Locks und Thread.Starts zu erhalten. Dazu muss der bestehende IL Code angepasst (instrumentiert) werden, damit er diese Informationen preisgibt. Dazu wird der Code analysiert und an Stellen mit wichtigen Zugriffen um Code erweitert. Wie in Kapitel \ref{chapter_IL} bereits beschrieben muss dabei der korrekte Aufbau des Stack jederzeit sichergestellt werden. Für die Instrumentation des Codes wird die Library Mono.Cecil aus dem Mono Projekt verwendet. Die Library erlaubt es den IL Code zu lesen und zu bearbeiten. 
-\begin{figure}[H]
-\centering
-\begin{lstlisting}[language=CIL,backgroundcolor=\color{backcolor}]
-IL_001a:  box        [mscorlib]System.Int32
-IL_001f:  stsfld     object TestProgram.Program::_a
-\end{lstlisting}
-\caption{Beispiel ohne Instrumentation}\label{example_codeWithoutInstrum}
-\end{figure}
-\autoref{example_codeWithoutInstrum} zeigt ein Beispiel, eines typischen Schreibzugriff im MS IL. Der Befehl "box" führt ein Boxing eines Integers durch. Dabei wird der Integerwert von einem Valuetype zu einem Referenztyp umgebaut. Auf dem Stack liegt nach dem Boxing die Adresse des Integer-Werts. Diese Adresse wird dann verwendet um den Wert in die Variable "\_a" mit dem Befehl "stsfld"(Store Static Field) zu speichern.\\
-\begin{figure}[H]
-\centering
-\begin{lstlisting}[language=CIL,backgroundcolor=\color{backcolor}]
-IL_001a:  box        [mscorlib]System.Int32
-//----------Instrumented Code...----------------
-IL_001f:  ldsflda    object TestProgram.Program::_a
-IL_0024:  ldc.i4.s   31
-IL_0026:  ldstr      "System.Void TestProgram.Program::Test()"
-IL_002b:  call       void [DPCLibrary]DPCLibrary.DpcLibrary::
-                                 WriteAccess(int32,int32,string)
-//----------...End Instrumentation--------------
-IL_0030:  stsfld     object TestProgram.Program::_a
-\end{lstlisting}
-\caption{Instrumentierter IL Code}\label{example_instrumentedCode}
-\end{figure}
-\autoref{example_instrumentedCode} zeigt den Code nach dem der Dynamic Parallel Checker diesen instrumentiert hat. Wie in \autoref{example_codeWithoutInstrum}, startet der Code mit "box" und endet mit "stsfld". Dazwischen wurde der Code um den Dynamic Parallel Checker erweitert. Um zu wissen auf welche Variable der Schreibzugriff durchgeführt wird, wird mit "ldsflda" (Load static Field Address) die Adresse der Resource ausgelesen und auf den Stack gelegt. Danach wird die Zeilennummer des Schreibzugriff auf den Stack gelegt (Man beachte: Die Zeilennummer zeigt die Zeile vor der Instrumentation) um bei einem Fehler aufzuzeigen, welche Code Zeilen diesen verursacht haben. Daher wird auch als nächstes der Methodennamen als String auf den Stack gelegt. Als letzte instrumentierte Zeile werden dann die Informationen an den Dynamic Parallel Checker übergeben. Dies wird mit der Methode "WriteAccess(int32,int32,string)" durchgeführt. Nach dem Instrumentierten Code hat der Stack wieder den gleichen Zustand wie nach dem "Box" Befehl in \autoref{example_codeWithoutInstrum}.
-\end{flushleft}
 \subsubsection{Vector Clock pro Thread}
 \begin{flushleft}
 Die Vector Clock eignet sich optimal für die History des Dynamic Parallel Checkers. Jeder Thread erhält seine eigene Vektor Clock, in der er die Zeitstempel der anderen Threads mitführt. Es wird nicht der aktuelle Zeitstempel mitgeführt, sondern der Zeitstempel der bei der letzten direkten oder indirekten Synchronisation mit diesem Thread mitgeliefert wurde. Bei einem Synchronisationspunkt wird die Vector Clock mit der Vector Clock aus der Lock-History synchronisiert (sh. \ref{lock_history}). Die Reihenfolge der Synchronisation ist jedoch nicht deterministisch und hängt vom Thread-Scheduler ab.\\
@@ -825,6 +825,7 @@ Um die Erkennungsrate des Algorithmus erhöhen zu können, müssen Tools mehrmal
 \subsection*{Persönliches Fazit}
 \subsubsection*{Fabian Keller}
 \subsubsection*{Dominik Heeb}
+Die Arbeit "A study of dynamic parallel checking methods" war für mich eine sehr spannende und lehrreiche Arbeit. Fabian und ich hatten zum Start über das Thema "dynamic checking" nur wenige Kenntnisse. Das Thema Concurrency hat mich persönlich sehr interessiert, da ich es schon mehrmals verwendet habe, aber noch nie tiefer angeschaut. Durch dieses Projekt hatten wir die Möglichkeit einen ganz anderen Blickwinkel über die Programmierung zu erhalten. Da wir früh schon eine grundsätzliche Idee für den Algorithmus hatten, war die Entwicklung effizienter von statten gegangen als wir uns gedacht hatten. Ich fand sehr gut, dass wir nicht einfach einen Algorithmus aus einem Paper implementiert haben, sondern durch diese Idee einen Algorithmus selbst entwickeln konnten und daher auch kennenlernen, was hinter der Entwicklung eines solchen für Arbeit steckt.
 \subsection*{Liste instrumentierte mscorlib Methoden}\label{sec:instrumentierte_methoden}
 Bereits instrumentierte Methoden:
 \begin{itemize}
