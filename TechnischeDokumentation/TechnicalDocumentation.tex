@@ -19,6 +19,7 @@
 \usepackage{float}
 \usepackage{colortbl}
 
+\setlength{\parindent}{0pt}
 \renewcommand*{\familydefault}{\sfdefault}
 \geometry{verbose,a4paper,tmargin=35mm,bmargin=35mm,lmargin=25mm,rmargin=25mm}
 \author{Dominik Heeb, Fabian Keller}
@@ -114,27 +115,23 @@ Eine Studie über Dynamic Parallel Checking Methoden
 \newpage
 \tableofcontents 
 \newpage
-
 \section{Abstract}
-Das Projekt "Dynamic Parallel Checker" behandelt die Entwicklung und Implementation eines Algorithmus zur Erkennung von Nebenläufigkeitsfehlern (Race Conditions) während der Laufzeit (dynamisch). Der entwickelte Algorithmus basiert auf dem Vector Clock Algorithmus von Colin Firdge und Friedmann Mattern \cite{acsc}. Mit dem Vector Clock Algortihmus ist es möglich, nebenläufige Schreib- und Lesezugriffe in eine partielle Ordnung zu bringen (Happend-Before, Concurrent). Diese Ordnung erlaubt es anschliessend Data Races zu identifiziert. Eine Date Race liegt vor, wenn Zugriffe nebenläufig mit mindestens einer Schreiboperation auf die selben Ressourcen zugegriffen haben. Neben den Lese- und Schreibzugriffen wird überwacht, wann ein Lock oder Unlock auf welche Ressource durchgeführt wird, sowie ein Thread oder Task gestartet wird. Diese Synchronisationspunkte dienen dazu, um die Vector Clocks zwischen den beiden Threads oder Tasks zu synchronisieren. Dadurch kann anschliessend mit Hilfe der Happened-Before Beziehung nachgewiesen werden, dass diese Zugriffe nicht nebenläufig stattgefunden haben. Alle Lese- und Schreibzugriffe werden pro Thread oder Task in einer optimierten History gehalten. Zudem werden die letzten Locks, welche ausgeführt wurden, in einer Lock-History gehalten, um beim erneuten Auftreten eines Locks eine Synchronisation durchzuführen.\\
+Das Projekt "Dynamic Parallel Checker" behandelt die Entwicklung und Implementation eines Algorithmus zur Erkennung von Nebenläufigkeitsfehlern (Race Conditions) während der Laufzeit (dynamisch). Der entwickelte Algorithmus basiert auf dem Vector Clock Algorithmus von Colin Firdge und Friedmann Mattern \cite{acsc}. Mit dem Vector Clock Algortihmus ist es möglich, nebenläufige Schreib- und Lesezugriffe in eine partielle Ordnung zu bringen (Happend-Before, Concurrent). Diese Ordnung erlaubt es anschliessend Data Races zu identifizieren. Eine Date Race liegt vor, wenn Zugriffe nebenläufig mit mindestens einer Schreiboperation auf dieselben Ressourcen stattgefunden haben. Neben den Lese- und Schreibzugriffen wird überwacht, wann ein Lock oder Unlock auf welche Ressource durchgeführt wird, sowie ein Thread oder Task gestartet wird. Diese Synchronisationspunkte dienen dazu, um die Vector Clocks zwischen den beiden Threads oder Tasks zu synchronisieren. Dadurch kann anschliessend mit Hilfe der Happened-Before Beziehung nachgewiesen werden, dass diese Zugriffe nicht nebenläufig stattgefunden haben. Alle Lese- und Schreibzugriffe werden pro Thread oder Task in einer optimierten History gehalten. Zudem werden die letzten Locks, welche ausgeführt wurden, in einer Lock-History gehalten, um beim erneuten Auftreten eines Locks eine Synchronisation durchzuführen.\\
 Die Implementation des Algorithmus instrumentiert Microsoft Intermediate Language Code (MSIL), der von allen .Net Sprachen verwendet wird, mit Hilfe des Frameworks Mono.Cecil. Daher ist es möglich mit dem Dynamic Parallel Checker alle in .Net entwickelten Applikationen zu überwachen. Der bestehende MSIL Code wird um Codestellen erweitert, welche die Dynamic Parallel Checker Library aufrufen und mit Informationen beliefern. Diese Informationen verwendet der Algorithmus, um Race Conditions zu erkennen.\\ 
 \newpage
 \section{Technischer Bericht}
 \subsection{Einleitung und Übersicht}
 Dieses Kapitel beinhaltet eine Beschreibung der verwendeten Konzepte und Technologien dieses Projekts. Für das Verständnis des gesamten technischen Berichts empfehlen wir das Lesen dieses Teils. Bei bereits vorhandener Fachkenntnis bezüglich der Thematik kann dieser Teil gerne übersprungen werden und direkt die Implementation betrachtet werden.
 \subsubsection{Dynamic Checker}
-\begin{flushleft}
 Um Race Conditions (sh. \ref{race_conditons}) zu erkennen, gibt es verschiedene Ansätze. Zwei davon sind, der Dynamic Checker und der Static Checker. In diesem Projekt
 wird ein Dynamic Checker entwickelt. Ein Dynamic Checker hat die Aufgabe, Race Conditions zur Laufzeit (dynamisch) zu erkennen. Der Static Checker
 im Gegensatz behandelt das Erkennen zur Entwicklungszeit. Um einen Dynamic Checker realisieren zu können, muss ein fertiges Programm instrumentiert werden.
 Mit Instrumentation ist gemeint, dass der kompilierte Code angepasst wird, so dass er während der Laufzeit einen Erkennungsalgorithmus ausführen kann, jedoch nicht das Verhalten des Programms verändert.\\
 Der Checker analysiert hauptsächlich Lese- und Schreibzugriffe auf Variablen. Um die Präzision zu erhöhen, müssen auch Lock/ Unlock und Thread.Start usw. ausgelesen werden.\\
 Mehr Informationen dazu unter: \ref{vector_algorithm} Vector Clock Algorithmus
-\end{flushleft}
 \subsubsection{Race Condition}\label{race_conditons}
-\begin{flushleft}
 Bei Race Conditions handelt es sich um Speicherzugriffsfehler. Sie entstehen, wenn mehrere Threads auf gemeinsame Ressourcen (Variablen, Fields, Collections, usw.) ohne genügende Synchronisation zugreifen. Diese können zu unerwarteten Resultaten oder Effekten führen. Eine Untergruppe der Race Conditions bilden die Data Races. Sie entstehen durch eine ungenügende Synchronisation, beim Zugriff auf Speicherstellen.
-Race Conditions können durch richtige Synchronisation (z.B. mit Sperren eines kritischen Abschnittes, oder durch Zustandssynchronisation) verhindert werden. In \autoref{fig:exampleRaceCondition} wird ein Code beschrieben, welcher diese Synchronisation komplett weglässt und daher Data Races entstehen.
+Race Conditions können durch richtige Synchronisation (z.B. mit Sperren eines kritischen Abschnittes, oder durch Zustandssynchronisation) verhindert werden. In \autoref{fig:exampleRaceCondition} wird ein Code beschrieben, welcher diese Synchronisation komplett weglässt und daher Data Races entstehen.\\
 \begin{figure}[H]
 \centering
 \begin{tabular}{|cc|}
@@ -148,6 +145,7 @@ Konto + 200 & Konto - 100 \\
 \caption[Beispiel Race Condition]{Ein unsynchronisierter Zugriff auf ein Konto}
 \label{fig:exampleRaceCondition}
 \end{figure}
+\newpage
 Wenn zwei Threads den Code unter \autoref{fig:exampleRaceCondition} nebenläufig ausführen, ist nicht deterministisch, wie die Threads zueinander verzahnt oder gleichzeitig laufen. Die Situation in \autoref{fig:exampleRaceCondition2} kann dadurch entstehen.Thread 1 und Thread 2 lesen den Wert in ihr eigenes Register. Die Addition erfolgt ebenfalls auf dem Register, wodurch jeder einen eigenen neuen Wert besitzt. Thread 1 schreibt seinen neuen Wert in das Memory, welcher vom neuen Wert von Thread 2 überschrieben wird. Durch diesen Vorgang entsteht das Resultat 0. Da die zwei Threads unterschiedliche Register besitzen, werden die Änderungen an den Variablen nicht an den anderen Thread übertragen.\\
 Bei korrekter Synchronisation wären beide Thread-Blöcke nacheinander durchgeführt worden, was zu einem korrekten Resultat von 200 geführt hätte.\\
 \begin{figure}[H]
@@ -169,14 +167,12 @@ Speichern in Memory 300 &\\
 Data Races wie unter \autoref{fig:exampleRaceCondition2} bleiben evtl. unentdeckt, da kein effektiver Fehlzustand im System entsteht, sondern Werte nicht richtig angepasst werden. Race Conditions zeichnen sich auch daher aus, dass sie stark vom Verarbeitungsablauf abhängen und daher nicht immer auftreten müssen. Wenn also die Threads in \autoref{fig:exampleRaceCondition2} in der richtigen Reihenfolge verarbeitet werden, wird evtl. kein Fehler entstehen.\\[0.4cm]
 \subsubsection*{Thread-Synchronisation}
 Data Races können durch richtige Synchronisation verhindert werden. Eine Möglichkeit zur Synchronisation sind Locks. Diese Sperren erlauben innerhalb des Locks nur einem Thread zu arbeiten. Dies kann Data Races verhindern, wenn das Locking korrekt durchgeführt wird, also kein Code im System nebenläufig ohne Lock auf die Variable zugreift. Es sollte jedoch beachtet werden, das Synchronisation relativ teuer ist und verhindert, das der Code Optimiert wird. Daher sollte nicht der gesamte Code synchronisiert werden.
-\end{flushleft}
-\subsubsection{Vector Clock}
-\begin{flushleft}
-Die einzelnen Lese- und Schreibzugriffe in einem System können nebenläufig in unterschiedlichen Threads ablaufen und dadurch nicht in eine totale Ordnung gebracht werden. Um nun jedem einzelnen Zugriff einen Zeitstempel zuzuordnen verwenden wir eine Vector Clock. Diese Vector Clock wird benötigt, um eine Aussage über die Nebenläufigkeit der einzelnen Zugriffe zu machen.\\
-Die Vector Clock basiert auf der Lamport's Clock von Leslie B. Lamport. Jeder Teilnehmer in einem System, in unserem Fall wären dies die einzelnen Threads, besitzt ein eigener Zeitstempel. Der eigene Zeitstempel kann unabhängig inkrementiert werden. Eine Synchronisation zwischen den Zeitstempeln der Threads findet jedoch nur statt, wenn ein Synchronisationspunkt (Memory Barrier) vorliegt. Ein Synchronisationspunkt ist z.B. wenn ein Thread 1 ein Lock auf ein Objekt a macht und zuvor ein anderer Thread 2 ein Unlock auf das Objekt a gemacht hat. Dadurch ist sichergestellt, dass jeder Zugriff vor dem Unlock von Thread 1 sicher vor jedem Zugriff nach dem Lock von Thread 2 stattgefunden hat. In diesem Fall wird nun der Zeitstempel von Thread 2 mit dem Zeitstempel von Thread 1 synchronisiert. Der Zeitstempel von Thread 1 bleibt wie gehabt. Mehr Informationen über die einzelnen Synchronisationspunkte finden Sie im Kapitel \ref{implementation} Implementation.\\
-Die Vector Clock erweitert die Lamport Clock nun dadurch, dass jeder Thread nicht nur einen globalen Zeitstempel besitzt sondern einen Vektor, der für jeden Thread einen eigenen Zeitstempel mitführt. D.h. jeder Thread besitzt nun einen eigenen Vektor mit den Zeitstempeln der anderen Threads. Jedoch befindet sich darin nicht der aktuelle Zeitstempel sondern der Zeitstempel der letzten Synchronisation mit dem jeweiligen Thread. Mit Hilfe der Vector Clock können die einzelnen Lese- und Schreibzugriffe eines Thread in eine partielle Ordnung gebracht werden.
 \newpage
-Eine Vector Clock wie in \autoref{example_vectorclock} besteht aus einem Vektor, der Key-Value Paare beinhaltet. Der Key ist die Thread- oder TaskId und der Value ist der spezifische Werk des Zeitstempels.\\
+\subsubsection{Vector Clock}
+Die einzelnen Lese- und Schreibzugriffe in einem System können nebenläufig in unterschiedlichen Threads ablaufen und dadurch nicht in eine totale Ordnung gebracht werden. Um nun jedem einzelnen Zugriff einen Zeitstempel zuzuordnen verwenden wir eine Vector Clock. Diese Vector Clock wird benötigt, um eine Aussage über die Nebenläufigkeit der einzelnen Zugriffe zu machen.\\
+Die Vector Clock basiert auf der Lamport's Clock von Leslie B. Lamport. Jeder Teilnehmer in einem System, in unserem Fall wären dies die einzelnen Threads, besitzt ein eigener Zeitstempel. Der eigene Zeitstempel kann unabhängig inkrementiert werden. Eine Synchronisation zwischen den Zeitstempeln der Threads findet jedoch nur statt, wenn ein Synchronisationspunkt (Memory Barrier) vorliegt. Ein Synchronisationspunkt ist z.B. wenn ein Thread1 ein Lock auf ein Objekt a macht und zuvor ein anderer Thread2 ein Unlock auf das Objekt a gemacht hat. Dadurch ist sichergestellt, dass jeder Zugriff vor dem Unlock von Thread1 sicher vor jedem Zugriff nach dem Lock von Thread2 stattgefunden hat. In diesem Fall wird nun der Zeitstempel von Thread2 mit dem Zeitstempel von Thread 1 synchronisiert. Der Zeitstempel von Thread1 bleibt wie gehabt. Mehr Informationen über die einzelnen Synchronisationspunkte finden Sie im Kapitel \ref{implementation} Implementation.\\
+Die Vector Clock erweitert die Lamport Clock nun dadurch, dass jeder Thread nicht nur einen globalen Zeitstempel besitzt sondern einen Vektor, der für jeden Thread einen eigenen Zeitstempel mitführt. D.h. jeder Thread besitzt nun einen eigenen Vektor mit den Zeitstempeln der anderen Threads. Jedoch befindet sich darin nicht der aktuelle Zeitstempel sondern der Zeitstempel der letzten Synchronisation mit dem jeweiligen Thread. Mit Hilfe der Vector Clock können die einzelnen Lese- und Schreibzugriffe eines Thread in eine partielle Ordnung gebracht werden.\\
+Eine Vector Clock wie in \autoref{example_vectorclock} besteht aus einem Vektor, der Key-Value Paare beinhaltet. Der Key ist die Thread- oder TaskId und der Value ist der spezifische Wert des Zeitstempels.\\
 \begin{figure}[H]
 \[
 	\begin{pmatrix}
@@ -188,9 +184,8 @@ Eine Vector Clock wie in \autoref{example_vectorclock} besteht aus einem Vektor,
 \]
 \caption{Beispiel einer Vector Clock}\label{example_vectorclock}
 \end{figure}
-\end{flushleft}
+\newpage
 \subsubsection{Happened-Before Beziehung}
-\begin{flushleft}
 Um mit Hilfe der Vector Clock die Nebenläufigkeit von Lese- und Schreibzugriffe zu bestimmen, verwenden wir die Happened-Before Beziehung von Leslie B. Lamport. Diese Beziehung wird in der Lamport Clock und in der Vector Clock verwendet, um eine partielle Ordnung innerhalb mehreren Ereignissen herzustellen. Bei nebenläufigen Programmen kann keine totale Ordnung erreicht werden, daher muss mit einer partiellen Ordnung gearbeitet werden. Unserem Algorithmus genügt die partielle Ordnung soweit, da ihn lediglich die Zugriffe interessieren, die nebenläufig stattgefunden haben. \\
 Die Happened-Before Beziehung vergleicht die Zeitstempel von zwei unterschiedlichen Zugriffen und kann dann eine Aussage darüber machen, ob diese nun nebenläufig oder zwingend nacheinander stattgefunden haben. Folgende Eigenschaften definieren die Happened-Before Beziehung:
 \begin{itemize}
@@ -200,7 +195,6 @@ Die Happened-Before Beziehung vergleicht die Zeitstempel von zwei unterschiedlic
 \end{itemize}
 Die Happened-Before Beziehung kann somit eine Aussage darüber machen, ob zwischen zwei unterschiedlichen Lese- oder Schreibzugriffen eine Synchronisation stattgefunden hat. Die Synchronisation zeigt, dass diese Zugriffe zwingend sequentiell abgelaufen sind und dadurch keine potenzielle Data Race darstellen können. Die Zugriffe können folgende Beziehungen zueinander haben:\\[0.5cm]
 \textbf{ Happened Before}\\[0.2cm]
-\end{flushleft}
 \begin{figure}[H]
 \begin{center}
 \begin{tabular}{ c c }
@@ -213,7 +207,6 @@ Die Happened-Before Beziehung kann somit eine Aussage darüber machen, ob zwisch
 \end{center}
 \caption{Beispiel Happened-Before Beziehung}\label{example_happenedbefore}
 \end{figure}
-\begin{flushleft}
 Die Happened-Before Beziehung in \autoref{example_happenedbefore} ist wie folgt definiert: Der Zeitstempel eines Threads 1 in einer Vector Clock ist grösser oder gleich (>=) dem Zeitstempel des selben Threads 1 in der Vector Clock von Thread 2. Mindestens eine Komponente der gesamten Vector Clock muss aber echt grösser (>) sein als in der anderen Vector Clock. In dieser Beziehung hat sicher eine Synchronisation zwischen den beiden Threads 1 und 2 stattgefunden und dadurch sind diese beiden Zugriffe keine potenzielle Race Condition.\\
 Beispiel (T1 happened before T2):\\
 \[
@@ -242,9 +235,8 @@ Beispiel:\\
 	\end{pmatrix}
 \]
 \\[0.5cm]
-\end{flushleft}\newpage
+\newpage
 \subsubsection{Microsoft IL Code}\label{chapter_IL}
-\begin{flushleft}
 Der Microsoft IL (Intermediate Language) Code (siehe auch: \cite{ecma}) wird verwendet, um einen sprach- und plattformunabhängigen Zwischencode zwischen dem Compiler und dem Prozessor zu bilden. Da der IL Code vereinheitlicht definiert ist, ist er unabhängig von der verwendeten Hardware. In diesem Zustand wird das Programm zum Kunden ausgeliefert und erst auf der Maschine durch einen JIT (Just in Time) Compiler zur Laufzeit kompiliert. Dieses Verfahren besitzt den Vorteil, dass der Code auf das jeweilige System abgestimmt wird und dadurch die Funktionen des Prozessors optimal ausnützt. Der Nachteil ist jedoch der Performanceverlust, da jede Methode vor dem Ausführen noch kompiliert werden muss.\\
 Für die Instrumentation, welche für den Dynamic Parallel Checker verwendet wird, ist der IL Code ideal, da er vereinheitlicht ist und daher nur eine Implementation entwickelt werden muss, welche für alle .NET Sprachen, sowie jedes Laufzeitsystem welches die .NET Runtime unterstützt funktioniert.\\
 Der MSIL Code ist Stack-basiert. Dies bedeutet das alle Operationen auf einem Stack nach dem LIFO Prinzip (Last In, First Out) durchgeführt werden. Der Stack wird dazu verwendet, die Werte vorzubereiten, zu verarbeiten und wieder vom Stack abzubauen. \autoref{example_stack} zeigt, wie eine Operation durchgeführt wird und in welchen Schritten die Parameter auf dem Stack vorbereitet werden müssen.\\
@@ -267,9 +259,7 @@ Um erfolgreich den Source Code für den Dynamic Parallel Checker zu instrumentie
 \label{example_injection}
 \end{figure}
 In \autoref{example_injection} ist ein Beispiel dargestellt, wie eine Instrumentation den Stack verwaltet und dabei die benötigte Information "obj" aus dem Stack extrahiert und den Ursprungszustand wiederherstellt. Da bei einem LIFO Stack nur auf das oberste Element zugegriffen werden kann, wird der Top-Wert "value" in eine lokale Variable gespeichert. Nach dem Abbau des duplizieren "obj" wird der Wert wieder aus der Variable auf den Stack gelegt.
-\end{flushleft}
 \subsubsection{Instrumentation}
-\begin{flushleft}
 Für die Durchführung des Vector Clock Algorithmus (sh. Kapitel \ref{vector_algorithm}) ist es wichtig die Informationen über Lese- / Schreibzugriffe sowie Locks und Thread.Starts zu erhalten. Dazu muss der bestehende IL Code angepasst (instrumentiert) werden, damit er diese Informationen preisgibt. Dazu wird der Code analysiert und an Stellen mit wichtigen Zugriffen um Code erweitert. Wie in Kapitel \ref{chapter_IL} bereits beschrieben muss dabei der korrekte Aufbau des Stack jederzeit sichergestellt werden. Für die Instrumentation des Codes wird die Library Mono.Cecil aus dem Mono Projekt verwendet \cite{monocecil}. Die Library erlaubt es den IL Code zu lesen und zu bearbeiten. 
 \begin{figure}[H]
 \centering
@@ -296,12 +286,10 @@ IL_0030:  stsfld     object TestProgram.Program::_a
 \caption{Instrumentierter IL Code}\label{example_instrumentedCode}
 \end{figure}
 \autoref{example_instrumentedCode} zeigt den Code nach dem der Dynamic Parallel Checker diesen instrumentiert hat. Wie in \autoref{example_codeWithoutInstrum}, startet der Code mit "box" und endet mit "stsfld". Dazwischen wurde der Code um den Dynamic Parallel Checker erweitert. Um zu wissen, auf welche Variable der Schreibzugriff durchgeführt wird, wird mit "ldsflda" (Load static Field Address) die Adresse der Ressource ausgelesen und auf den Stack gelegt. Danach wird die Zeilennummer des Schreibzugriff auf den Stack gelegt (Man beachte: Die Zeilennummer zeigt die Zeile vor der Instrumentation), um bei einem Fehler aufzuzeigen, welche Codezeilen diesen verursacht haben. Daher wird auch als nächstes der Methodennamen als String auf den Stack gelegt. Als letzte instrumentierte Zeile werden dann die Informationen an den Dynamic Parallel Checker übergeben. Dies wird mit der Methode "WriteAccess(int32,int32,string)" durchgeführt. Nach dem Instrumentierten Code hat der Stack wieder den gleichen Zustand wie nach dem "Box" Befehl in \autoref{example_codeWithoutInstrum}.
-\end{flushleft}
 \subsection{Implementation}\label{implementation}
 In diesem Kapitel wird die Implementation des Dynamic Prallel Checker genauer erklärt. Unter \ref{example} ist das Beispiel beschrieben an welchem, in den folgenden Kapitel, die Funktion des Dynamic Parallel Checkers beschrieben wird. Der Dynamic Parallel Checker wurde mit C\#.Net entwickelt.
 \newpage
 \subsubsection{Beispiel}\label{example}
-\begin{flushleft}
 Der Vektor Clock Algorithmus wird in diesem Kapitel mit Hilfe von folgendem Pseudo-Code Beispiel genauer erläutert.\\
 \begin{figure}[H]
 \begin{singlespace}
@@ -339,24 +327,19 @@ Console.WriteLine(a);
 \end{singlespace}
 \caption{Beispiel für die Erklärung des Algorithmus}\label{basic_example}
 \end{figure}
-Da der Code in \autoref{basic_example} asynchron durchgeführt wird, werden die 3 enstehenden Thread parallel ausgeführt. \autoref{basic_example_parallel} zeigt was die einzelnen Threads parallel durchführen. "w( ), r( )" stehen für Write und Read Vorgänge des Threads. Der Buchstabe in der Klammer für die Ressource.
+Da der Code in \autoref{basic_example} asynchron durchgeführt wird, werden die 3 enstehenden Thread parallel ausgeführt. \autoref{basic_example_parallel} zeigt was die einzelnen Threads parallel durchführen. "w(), r()" stehen für Write und Read Vorgänge des Threads. Der Buchstabe in der Klammer für die Ressource.
 \begin{figure}[H]
 \centering
 \includegraphics[scale=0.5]{images/VectorCheckingAlgorithm.png}
 \caption{Darstellung der parallelen Vorgänge von \autoref{basic_example}}
 \label{basic_example_parallel}
 \end{figure}
-\end{flushleft}
 \newpage
 \subsubsection{Vector Clock pro Thread}
-\begin{flushleft}
 Die Vector Clock eignet sich optimal für die History des Dynamic Parallel Checkers. Jeder Thread erhält seine eigene Vektor Clock, in der er die Zeitstempel der anderen Threads mitführt. Es wird nicht der aktuelle Zeitstempel mitgeführt, sondern der Zeitstempel der bei der letzten direkten oder indirekten Synchronisation mit diesem Thread mitgeliefert wurde. Bei einem Synchronisationspunkt wird die Vector Clock mit der Vector Clock aus der Lock-History synchronisiert (sh. \ref{lock_history}). Die Reihenfolge der Synchronisation ist jedoch nicht deterministisch und hängt vom Thread-Scheduler ab.\\
 Unser Algorithmus verwendet die Vector Clock des aktuellen Threads, um diese mit den Vector Clocks der History der anderen Threads zu vergleichen. Dadurch kann in Erfahrung gebracht werden, welche Zugriffe nebenläufig zu dem aktuellen Zugriff stattgefunden haben. Dies zeigt die Notwendigkeit, dass jeder Thread seine eigene Vector Clock hat.
-\end{flushleft}
 \subsubsection{Lock-History}\label{lock_history}
-\begin{flushleft}
 Während der kompletten Überwachung wird eine Lock-History (\autoref{example_lockHistory}) geführt. Diese beinhaltet die Information, welcher Thread zuletzt auf welche Ressource zu welcher Zeit (Vector Clock) einen Lock durchgeführt hat. Diese Information wird benötigt um z.B. eine Synchronisation zwischen dem Thread, der den letzten Unlock auf eine Ressource durchgeführt hat, mit dem aktuellen Thread, der nun einen Lock auf die selbe Ressource durchführen möchte, vorzunehmen. Bei jedem Unlock wird ein neuer Lock-History Eintrag erstellt, falls noch keiner vorhanden ist. Sollte jedoch bereits einer vorhanden sein, wird dieser einfach überschrieben.\\
-\end{flushleft}
 \begin{figure}[H]
 \begin{center}
 \textbf{\textit{Lock-History:}}\\[0.5cm]
@@ -368,8 +351,7 @@ Während der kompletten Überwachung wird eine Lock-History (\autoref{example_lo
 \caption{Beispiel Lock-History}\label{example_lockHistory}
 \end{center}
 \end{figure}
-\textbf{Synchronisation der Vector Clock}
-\begin{flushleft}
+\textbf{Synchronisation der Vector Clock}\\[0.3cm]
 Wenn z.B. im Beispielprogramm (\autoref{basic_example}) Thread1 (T1) vor Thread3 (T3) in den Lock(a) Bereich kommt, schreibt er beim Verlassen des gesicherten Bereichs einen Eintrag in die Lock-History. Wenn nun T3 den Lock(a) beziehen möchte, prüft der Algorithmus zuerst, ob ein Eintrag in der Lock-History vorhanden ist. Ist die der Fall, wird die eigene Vector Cock (a3, b3, c3) mit der Vector Clock des History Eintrags (a1, b1, c1) synchronisiert (\autoref{example_vectorClockSync}).\\
 \newpage
 Vorgehensweise bei der Synchronisation:
@@ -396,9 +378,7 @@ Vorgehensweise bei der Synchronisation:
 \caption{Beispiel Vector Clock Synchronisation}\label{example_vectorClockSync}
 \end{figure}
 Somit stehen alle Zugriffe, von vor der Synchronisation von Thread1, in der Happened-Before Beziehung mit allen Zugriffen von Thread3 nach der Synchronisation. Somit können diese Zugriffe keine Race Condition darstellen.
-\end{flushleft}
 \subsubsection{Vector Clock Algorithmus}\label{vector_algorithm}
-\begin{flushleft}
 Mit Hilfe der Instrumentierung wird bei jedem Auftreten eines Ereignisses (Lese- oder Schreibzugriff, Lock oder Unlock auf Ressource, Start eines Threads usw.) unsere Dynamic Parallel Checker Library aufgerufen und anschliessend unser Algorithmus durchlaufen.\\[0.3cm]
 Handelt es sich bei dem Ereignis im einen Lock auf eine Ressource, wird das Ablaufdiagramm in \autoref{algo_lock} durchlaufen. Zuerst wird überprüft, ob in der Lock-History bereits ein Eintrag vorhanden ist, der auf die gleiche Ressource lautet. Ist dies der Fall, findet eine Synchronisation zwischen der Vector Clock des aktuellen Threads und der Vector Clock des Eintrags in der Lock-History statt. Die Synchronisation ist in \ref{lock_history} beschrieben.\\
 \begin{figure}[H]
@@ -419,9 +399,7 @@ Anschliessend wird das aktuelle Ereignis auf Race Conditions geprüft. Dafür be
 	\includegraphics[width=14cm,height=6cm,trim=70mm 100mm 80mm 7mm, clip]{images/ReadWrite.pdf}
 \caption{Algorithmus - Read/Write}\label{algo_readwrite}
 \end{figure}
-\end{flushleft}
-\textbf{Algorithmus Beispiel}
-\begin{flushleft}
+\textbf{Algorithmus Beispiel}\\[0.3cm]
 In diesem Kapitel wird der Algorithmus auf das Beispielprogramm  in \autoref{basic_example} angewendet. Dabei ist zu beachten, dass dieses Beispiel lediglich eine mögliche Ablaufsequenz aufzeigt. Änderst sich das Scheduling, ändert sich auch das komplette Verhalten des Algorithmus.\\
 \begin{itemize}
 \item \textit{Alle Threads werden gestartet. Jede Instanz eines Threads oder Tasks instanziiert eine neue Vector Clock. Die Lock-History sowie die Programm-History ist noch leer.}\\[0.3cm]
@@ -686,13 +664,12 @@ In diesem Kapitel wird der Algorithmus auf das Beispielprogramm  in \autoref{bas
 	\end{pmatrix}
 \]
 \end{itemize}
-\end{flushleft}
 \newpage
 \section{Schlussfolgerungen}
 TODO\\
+Der Projektumfang 
 \subsection{Performance}
 \subsubsection{Testvorgang}
-\begin{flushleft}
 Im Rahmen des Projektabschluss wurde der Dynamic Parallel Checker einigen Performance Tests ausgesetzt. Dabei wurden Tools gesucht welche mit .Net programmiert wurden. Die Messungen zeigten starke Differenzen in der Performance des Checkers auf.
 \subsubsection*{Testfall 1: TestTool}
 Dieses Tool wurde im Rahmen des Projekt für das Testen des Algorithmus entwickelt. Es handelt sich um eine Console-Application, welche verschiedene synchrone und asynchrone Read/Writes durchführt.\\
@@ -730,21 +707,15 @@ ca. 26ms & ca. 36992ms \\
 \end{tabular} 
 Faktor 1422x\\[0.4cm]
 In der Analyse zeigt sich, das der Parallel File Search viele Tasks startet. Diese müssen als Vector Clock erfasst werden und mit allen anderen überprüft werden. Dadurch steigt der Aufwand des Algorithmus mit der Anzahl Thread/Tasks an.
-\end{flushleft}
 \subsubsection{Schlussfolgerung Performance}
 \subsection{Technische Findings}
 \subsubsection{Task/Threads}\label{chapter_taskthread}
-\begin{flushleft}
 Das .Net Framework von Microsoft kennt zwei asynchrone Operationstypen. Task oder Threads. Der Unterschied dieser zwei Typen liegt auf der Ausführungsumgebung. Threads werden direkt gestartet und vom Prozessor parallel verarbeitet. Task wurden zusammen mit der Task Parallel Library eingeführt. Dieser Typ wird nicht direkt ausgeführt, sondern in eine Queue geladen und dann von Worker Threads berechnet. Die Worker Threads werden vom .Net Framework automatisch gestartet. Die Anzahl wird durch die Laufzeitumgebung bestimmt, z.B. wie viele Kernen der Prozessor hat. Der Vorteil dieser Methode gegenüber der Threads ist es, das die Belastung auf den Arbeitsspeicher und Prozessor bei vielen parallelen Vorgängen optimiert und gesenkt wird. Der Nachteil ist, das es schneller zu Deadlocks kommen kann, wenn die Threads untereinander abhängig sind.\\
 Für die Entwicklung des Dynamic Parallel Checker ist der Unterschied zwischen Task und Threads dahingehend wichtig, da die ID des Threads bei Tasks der ID des Worker Thread entspricht. Um den Detailgrad der Erkennung zu erhöhen, wurde bei Tasks die Task ID und nicht die Thread ID für die Erkennung verwendet.
-\end{flushleft}
 \subsubsection{Garbage Collector}
-\begin{flushleft}
 Der Garbage Colletor (GC) verwaltet die Belegung und Freigabe von Arbeitsspeicher einer Anwendung. Bei der Erzeugung eines Objektes, wird dem Objekt die Speicherplatzadresse auf dem Heap zugewiesen. Da nicht unendlich Arbeitsspeicher vorhanden ist, greift der GC ein, und reorganisiert die Speicherplatzbelegung. Dabei kann es vorkommen, dass bestehenden Objekten eine neue Speicherstelle und somit auch eine neue Speicheradresse zugewiesen wird. Dies kann für den Dynamic Parallel Checker ein grosses Problem darstellen.\\
 Der Dynamic Parallel Checker identifiziert die Objekte, auf die ein Zugriff stattgefunden hat, mit Hilfe deren Adressen. D.h. sobald der Garbage Collector den Arbeitsspeicher reorganisiert hat, haben die selben Objekte nicht mehr die gleiche Adresse und der Dynamic Parallel Checker funktioniert dadurch nicht mehr. Es gibt keine Möglichkeit die Änderungen des GCs in Erfahrung zu bringen und dadurch die gesamte History anzupassen. Sollte der GC eine Reorganisation durchführen, meldet die Dynamic Parallel Checker Library Fehlmeldungen (False-Positives).
-\end{flushleft}
 \subsubsection{Short Branches}
-\begin{flushleft}
 Der MSIL Code verwendet für Befehle wie "try/catch/finally/if/else usw." Branches. Ein Branch ist ein Befehl im IL Code welcher eine Sprungmarke definiert. Dabei wird als Operand die Code Zeile zu welcher der Branch springen soll definiert. MSIL kennt 13 verschiedene Branches (sh. \cite{ecma} III.3.5 - III.3.18 ohne III.3.16), alle funktionieren nach dem selben Prinzip. Der Operand des Befehls beinhaltet die Code Zeile, zur welcher gesprungen werden soll.\\
 Durch die Instrumentation für den Dynamic Parallel Checker verändern sich die Zeilennummern. Daher ist es wichtig, dass diese nachgeführt werden. Mono.Cecil unterstützt den Entwickler soweit, das über die direkte Referenz auf die Zielcodezeile der Wert nachgetragen wird. Jedoch besitzen alle Branches neben dem Standard OpCode, auch ein "*.s" OpCode. Zum Beispiel gibt es für "brtrue IL\_3A303", den Code "brtrue.s IL\_03", wobei "*.s" nur für Code Zeilennummern kleiner "IL\_FF" verwendet werden kann. Durch die Instrumentation des Dynamic Parallel Checkers kann dieser Wert aber überschritten werden. Mono.Cecil hat keine automatische Erkennung solcher Branch-Fehler.
 \begin{figure}[H]
@@ -758,10 +729,8 @@ method.Body.OptimizeMacros();
 \end{figure}
 Die Methode SimplifyMacros in \autoref{branch_optimization} wird dazu verwendet, das Mono.Cecil alle "brtrue.s" in "brtrue" umwandelt. Dadurch kann die Zeilennummer auf die grösse die nötig ist gesetzt werden. Der Befehl OptimizeMacros versucht dann nach der Instrumentation "brtrue" wieder auf "brtrue.s" zu wandeln. Dadurch wird der Code wieder optimiert wenn möglich.\\
 Wenn der Code in Mono.Cecil eingelesen wird, werden alle Adressen in den Branches als Referenz auf die jeweilige Instanz der Ziel-Methode gehalten. Wenn die Methode gelöscht wird, ist die Referenz ungültig und Mono.Cecil zeigt auf eine Unbekannte Adresse. Dadurch wird der Code instabil. Daher sollte wenn möglich Code nicht aus der Instrumentation gelöscht werden, sondern der OpCode und Operand manuell ersetzt werden.
-\end{flushleft}
 \section{Backlog}
 \subsection{Fehlende Synchronisationsoperationen}
-\begin{flushleft}
 Der Umfang dieser Arbeit beschränkte sich aus zeitlichen Gründen auf einen gewissen Umfang. Die bereits instrumentierten Synchronisationspunkte befinden sich im Anhang. (sh. \nameref{sec:instrumentierte_methoden})\\
 Folgende Synchronisationspunkte könnten bei einer Weiterentwicklung dieses Projekts noch instrumentiert werden:
 \begin{itemize}
@@ -782,21 +751,14 @@ Folgende Synchronisationspunkte könnten bei einer Weiterentwicklung dieses Proj
 \item Finalizer
 \item Parallel.Invoke() / Parallel.For() / Parallel.ForEach()
 \end{itemize}
-\end{flushleft}
 \subsection{Funktionsweise}
 \subsubsection*{Deadlock Erkennung}
-\begin{flushleft}
 Die implementierte Funktionalität erlaubt es zur Zeit nur, Race Conditions zu erkennen. Von Vorteil wäre es, wenn zusätzlich noch Deadlocks erkannt werden. Dafür müsste aber der vorhandene Algorithmus noch erweitert werden. Vor jedem Lock auf eine Ressource müsste die Dynamic Parallel Checker Library informiert werden und eine eigene Liste geführt werden, welcher Thread welchen Lock bezogen hat. Sobald ein Thread den Lock freigibt, müsste dieser Eintrag wieder gelöscht werden. Dadurch könnte erkannt werden, dass zwei unterschiedliche Threads sich gegenseitig sperren.
-\end{flushleft}
 \subsubsection*{Dependencies instrumentieren}
-\begin{flushleft}
 In dieser Version wird eine spezifische Applikation instrumentiert. Sollte die Anwendung noch  Abhängigkeiten zu weiteren, selbst entwickelten Libraries besitzen, werden Race Conditions, aus diesen Libraries, nicht erkannt. Dies, aufgrund der Tatsache, dass die Abhängigkeiten nicht instrumentiert werden. Diese zusätzliche Funktionalität, würde den Umfang des Überprüfungsbereichs erweitern. Dabei ist zu beachten, dass die Microsoft Core Library (mscorlib) nicht mit instrumentiert wird. Dies würde den Rahmen der Überwachung sprengen.
-\end{flushleft}
 \subsection{Vision}
 \subsubsection*{Unit Testing}
-\begin{flushleft}
 Um die Erkennungsrate des Algorithmus erhöhen zu können, müssen Tools mehrmals den Test durchlaufen. Daher ist eine Vision, den Algorithmus in ein Concurrent-UnitTesting Framework einzubauen. Dieses erlaubt dem Entwickler das erstellen von ConcurrentTests, welche nicht nur einen synchronen Test durchführen, sondern die Tests parallel zu einander ausführt um Race Conditions zu provozieren. Der Dynamic Parallel Checker Algortihmus überwacht die Unit Tests und meldet auftretende Race Conditions. Dadurch würden Tools vor dem Deployment und im Entwicklungszyklus jederzeit auf Race Conditions getestet, was die Entwickler sensibilisiert auf parallele Probleme und die Qualität der Software erhöht. Das Unit Testing Framework kann durch einen eigenen Scheduler in der Erkennung noch weiter verbessert werden. Durch ein gezieltes Verzahnen der Threads könnte provoziert werden, dass diese Race Conditions oder Deadlocks generieren
-\end{flushleft}
 \section*{Glossar}
 \addcontentsline{toc}{section}{Glossar}
 - Partielle Ordnung\\
@@ -826,7 +788,7 @@ Um die Erkennungsrate des Algorithmus erhöhen zu können, müssen Tools mehrmal
 \addcontentsline{toc}{section}{Anhang}
 \subsection*{Persönliches Fazit}
 \subsubsection*{Fabian Keller}
-Die parallele Programmierung ist ein immer aktuelleres Thema in der Praxis. Daher denke ich, dass ich mit der Thematik dieser Studienarbeit für das spätere Berufsleben sehr viel gewinnen konnte. Das Thema  hat mich seit Beginn sehr interessiert. Auch wenn die Thematik eine gewisse Komplexität mit sich brachte, konnten wir uns sehr schnell in dem Thema zurecht finden und Fortschritte erzielen. Besonders von der Einsicht in die tieferen Schichten der Programmiersprache (MSIL) und das genaue Analysieren der Microsoft Core Library (mscorlib) konnte ich persönlich sehr profitieren. Zudem was das Entwickeln eines neuen Algorithmus für die Erkennung von Race Conditions eine Herausforderung, die mir sehr gefiel. Die Zusammenarbeit im Team funktionierte hervorragend. Beide Teammitglieder haben sich gegenseitig ergänzt und dadurch ein sehr gut funktionierendes Team gebildet. Ebenfalls war die Zusammenarbeit mit unserem Betreuer Prof. Dr. Luc Bläser, der uns sehr kompetent und mit viel Einsatz betreut hat, wieder hervorragend. Vielen Dank dafür.\\
+Die parallele Programmierung ist ein immer aktuelleres Thema in der Praxis. Daher denke ich, dass ich mit der Thematik dieser Studienarbeit für das spätere Berufsleben sehr viel gewinnen konnte. Das Thema  hat mich seit Beginn sehr interessiert. Auch wenn die Thematik eine gewisse Komplexität mit sich brachte, konnten wir uns sehr schnell in dem Thema zurecht finden und Fortschritte erzielen. Besonders von der Einsicht in die tieferen Schichten der Programmiersprache und das genaue Analysieren der Microsoft Core Library (mscorlib) konnte ich persönlich sehr profitieren. Zudem was das Entwickeln eines neuen Algorithmus für die Erkennung von Race Conditions eine Herausforderung, die mir sehr gefiel. Die Zusammenarbeit im Team funktionierte hervorragend. Beide Teammitglieder haben sich gegenseitig ergänzt und dadurch ein sehr gut funktionierendes Team gebildet.\\
 \subsubsection*{Dominik Heeb}
 Die Arbeit "A study of dynamic parallel checking methods" war für mich eine sehr spannende und lehrreiche Arbeit. Fabian und ich hatten zum Start über das Thema "dynamic checking" nur wenige Kenntnisse. Das Thema Concurrency hat mich persönlich sehr interessiert, da ich es schon mehrmals verwendet habe, aber noch nie tiefer angeschaut. Durch dieses Projekt hatten wir die Möglichkeit einen ganz anderen Blickwinkel über die Programmierung zu erhalten. Da wir früh schon eine grundsätzliche Idee für den Algorithmus hatten, war die Entwicklung effizienter von statten gegangen als wir uns gedacht hatten. Ich fand sehr gut, dass wir nicht einfach einen Algorithmus aus einem Paper implementiert haben, sondern durch diese Idee einen Algorithmus selbst entwickeln konnten und daher auch kennenlernen, was hinter der Entwicklung eines solchen für Arbeit steckt.
 \subsection*{Liste instrumentierte mscorlib Methoden}\label{sec:instrumentierte_methoden}
