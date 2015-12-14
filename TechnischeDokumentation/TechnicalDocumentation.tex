@@ -666,13 +666,13 @@ In diesem Kapitel wird der Algorithmus auf das Beispielprogramm  in \autoref{bas
 \end{itemize}
 \newpage
 \section{Schlussfolgerungen}
-TODO\\
-Der Projektumfang 
+Der entwickelte Dynamic Parallel Checker ermöglicht eine hohe Erkennungsrate von Race Conditions. Zur Zeit befinden sich jedoch noch viele Fehlmeldungen (False-Positives) unter den Meldungen, weil einige möglichen Synchronisationspunkte noch nicht instrumentiert werden (sh. \nameref{missing_syncOperations}).\\
+Das heisst, dass unser System einige Zugriffe als Race Conditions erkennt, obwohl zuvor vielleicht eine Synchronisation stattgefunden hat, sodass diese Zugriffe nicht mehr nebenläufig stattgefunden haben. Sobald die Methoden aus Kapitel \nameref{missing_syncOperations} instrumentiert sind, werden die Fehlmeldungen auf ein Minimum reduziert. Dies ist unumgänglich, wenn dieser Algorithmus in der Praxis genutzt werden sollte.
 \subsection{Performance}
 \subsubsection{Testvorgang}
 Im Rahmen des Projektabschluss wurde der Dynamic Parallel Checker einigen Performance Tests ausgesetzt. Dabei wurden Tools gesucht welche mit .Net programmiert wurden. Die Messungen zeigten starke Differenzen in der Performance des Checkers auf.
 \subsubsection*{Testfall 1: TestTool}
-Dieses Tool wurde im Rahmen des Projekt für das Testen des Algorithmus entwickelt. Es handelt sich um eine Console-Application, welche verschiedene synchrone und asynchrone Read/Writes durchführt.\\
+Dieses Tool wurde im Rahmen des Projekt für das Testen des Algorithmus entwickelt. Es handelt sich um eine Console-Application, welche verschiedene synchrone und asynchrone Read/Writes durchführt.
 \subsubsection*{Resultat}
 \begin{tabular}{|c|c|}
 \hline 
@@ -684,7 +684,7 @@ ca. 70ms & ca. 205ms \\
 Faktor 2.9x\\[0.4cm]
 Das Resultat zeigt einen moderaten Anstieg der Verarbeitungszeit. In der Analyse zeigt sich in diesem Testfall, dass das TestTool wenige komplexe asynchrone Verarbeitungen durchführt. Daher werden wenige Vector Clocks erfasst und berechnet. Da das Tool vor allem aus Code besteht, welcher instrumentiert werden muss, ist die Grösse des Tools von 18KB ohne Instrumentierung auf 32KB angestiegen
 \subsubsection*{Testfall 2: Tic-Tac-Toe}
-Um die Performance des Algorithmus mit vielen Read/Writes im synchronen Ablauf zu testen, wurde ein Tic-Tac-Toe Spiel gefunden und getestet. Da der Code rein synchron ist, werden wenige Vector Clocks generiert. Getestet wurde der Vorgang in welchem der Computergegner versucht den besten Zug zu evaluieren und durchzuführen. Dieser Vorgang ist stark rekursiv und führt zu vielen Read / Writes\\
+Um die Performance des Algorithmus mit vielen Read/Writes im synchronen Ablauf zu testen, wurde ein Tic-Tac-Toe Spiel gefunden und getestet. Da der Code rein synchron ist, werden wenige Vector Clocks generiert. Getestet wurde der Vorgang in welchem der Computergegner versucht den besten Zug zu evaluieren und durchzuführen. Dieser Vorgang ist stark rekursiv und führt zu vielen Read / Writes
 \subsubsection*{Resultat}
  \begin{tabular}{|c|c|}
 \hline 
@@ -730,7 +730,7 @@ method.Body.OptimizeMacros();
 Die Methode SimplifyMacros in \autoref{branch_optimization} wird dazu verwendet, das Mono.Cecil alle "brtrue.s" in "brtrue" umwandelt. Dadurch kann die Zeilennummer auf die grösse die nötig ist gesetzt werden. Der Befehl OptimizeMacros versucht dann nach der Instrumentation "brtrue" wieder auf "brtrue.s" zu wandeln. Dadurch wird der Code wieder optimiert wenn möglich.\\
 Wenn der Code in Mono.Cecil eingelesen wird, werden alle Adressen in den Branches als Referenz auf die jeweilige Instanz der Ziel-Methode gehalten. Wenn die Methode gelöscht wird, ist die Referenz ungültig und Mono.Cecil zeigt auf eine Unbekannte Adresse. Dadurch wird der Code instabil. Daher sollte wenn möglich Code nicht aus der Instrumentation gelöscht werden, sondern der OpCode und Operand manuell ersetzt werden.
 \section{Backlog}
-\subsection{Fehlende Synchronisationsoperationen}
+\subsection{Fehlende Synchronisationsoperationen}\label{missing_syncOperations}
 Der Umfang dieser Arbeit beschränkte sich aus zeitlichen Gründen auf einen gewissen Umfang. Die bereits instrumentierten Synchronisationspunkte befinden sich im Anhang. (sh. \nameref{sec:instrumentierte_methoden})\\
 Folgende Synchronisationspunkte könnten bei einer Weiterentwicklung dieses Projekts noch instrumentiert werden:
 \begin{itemize}
@@ -761,15 +761,19 @@ In dieser Version wird eine spezifische Applikation instrumentiert. Sollte die A
 Um die Erkennungsrate des Algorithmus erhöhen zu können, müssen Tools mehrmals den Test durchlaufen. Daher ist eine Vision, den Algorithmus in ein Concurrent-UnitTesting Framework einzubauen. Dieses erlaubt dem Entwickler das erstellen von ConcurrentTests, welche nicht nur einen synchronen Test durchführen, sondern die Tests parallel zu einander ausführt um Race Conditions zu provozieren. Der Dynamic Parallel Checker Algortihmus überwacht die Unit Tests und meldet auftretende Race Conditions. Dadurch würden Tools vor dem Deployment und im Entwicklungszyklus jederzeit auf Race Conditions getestet, was die Entwickler sensibilisiert auf parallele Probleme und die Qualität der Software erhöht. Das Unit Testing Framework kann durch einen eigenen Scheduler in der Erkennung noch weiter verbessert werden. Durch ein gezieltes Verzahnen der Threads könnte provoziert werden, dass diese Race Conditions oder Deadlocks generieren
 \section*{Glossar}
 \addcontentsline{toc}{section}{Glossar}
-- Partielle Ordnung\\
-- Totale Ordnung\\
-- Thread\\
-- Task\\
+
+\begin{tabular}{l p{12cm}l}
+\textit{Totale Ordnung} & Eine totale Ordnung liegt vor, wenn sich alle Elemente in eindeutiger Weise sortieren lassen (wenn jedes Elemente immer kleiner gleich (<=) dem nächsten Element ist). z.B. die endliche Menge der natürlichen Zahlen.\\[0.2cm]
+\textit{Partielle Ordnung} & Teilmengen könnten in eine Ordnung gebracht werden, jedoch die einzelnen Teilmengen können in der Gesamtmenge nicht mehr in eine Ordnung gebracht werden.\\[0.2cm]
+\textit{Thread} & Ist in der Informatik ein Ausführungsstrang oder eine Ausführungsreihenfolge in der Abarbeitung eines Programms. Der Entwickler kann ein zusätzlicher Ausführungsstrang (Thread) erstellen und starten um Instruktionen quasi parallel zum Hauptprogramm auszuführen. \\[0.2cm]
+\textit{Task} & Ein Task ist ein Paket aus Instruktionen, die quasi parallel von mehreren Worker Threads abgearbeitet werden. \\
+\end{tabular}
 \section*{Abbildungsverzeichnis}
 \addcontentsline{toc}{section}{Abbildungsverzeichnis}
 \makeatletter
 \@starttoc{lof}
 \makeatother
+\newpage
 \section*{Literaturverzeichnis}
 \addcontentsline{toc}{section}{Literaturverzeichnis}
 \newcommand\oldsection{}
@@ -791,6 +795,7 @@ Um die Erkennungsrate des Algorithmus erhöhen zu können, müssen Tools mehrmal
 Die parallele Programmierung ist ein immer aktuelleres Thema in der Praxis. Daher denke ich, dass ich mit der Thematik dieser Studienarbeit für das spätere Berufsleben sehr viel gewinnen konnte. Das Thema  hat mich seit Beginn sehr interessiert. Auch wenn die Thematik eine gewisse Komplexität mit sich brachte, konnten wir uns sehr schnell in dem Thema zurecht finden und Fortschritte erzielen. Besonders von der Einsicht in die tieferen Schichten der Programmiersprache und das genaue Analysieren der Microsoft Core Library (mscorlib) konnte ich persönlich sehr profitieren. Zudem was das Entwickeln eines neuen Algorithmus für die Erkennung von Race Conditions eine Herausforderung, die mir sehr gefiel. Die Zusammenarbeit im Team funktionierte hervorragend. Beide Teammitglieder haben sich gegenseitig ergänzt und dadurch ein sehr gut funktionierendes Team gebildet.\\
 \subsubsection*{Dominik Heeb}
 Die Arbeit "A study of dynamic parallel checking methods" war für mich eine sehr spannende und lehrreiche Arbeit. Fabian und ich hatten zum Start über das Thema "dynamic checking" nur wenige Kenntnisse. Das Thema Concurrency hat mich persönlich sehr interessiert, da ich es schon mehrmals verwendet habe, aber noch nie tiefer angeschaut. Durch dieses Projekt hatten wir die Möglichkeit einen ganz anderen Blickwinkel über die Programmierung zu erhalten. Da wir früh schon eine grundsätzliche Idee für den Algorithmus hatten, war die Entwicklung effizienter von statten gegangen als wir uns gedacht hatten. Ich fand sehr gut, dass wir nicht einfach einen Algorithmus aus einem Paper implementiert haben, sondern durch diese Idee einen Algorithmus selbst entwickeln konnten und daher auch kennenlernen, was hinter der Entwicklung eines solchen für Arbeit steckt.
+\newpage
 \subsection*{Liste instrumentierte mscorlib Methoden}\label{sec:instrumentierte_methoden}
 Bereits instrumentierte Methoden:
 \begin{itemize}
