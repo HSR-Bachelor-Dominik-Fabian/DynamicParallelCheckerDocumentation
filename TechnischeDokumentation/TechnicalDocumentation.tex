@@ -136,13 +136,13 @@ Race Conditions können durch richtige Synchronisation (z.B. mit Sperren eines k
 \centering
 \begin{tabular}{|cc|}
 \hline
-\multicolumn{2}{|c|}{Konto = 100} \\ 
+\multicolumn{2}{|c|}{Variable = 100} \\ 
  &  \\ 
 Thread 1 & Thread 2 \\ 
-Konto + 200 & Konto - 100 \\ 
+Variable + 200 & Variable - 100 \\ 
 \hline
 \end{tabular}
-\caption[Beispiel Race Condition]{Ein unsynchronisierter Zugriff auf ein Konto}
+\caption[Beispiel Race Condition]{Ein unsynchronisierter Zugriff auf eine Variable}
 \label{fig:exampleRaceCondition}
 \end{figure}
 \newpage
@@ -161,7 +161,7 @@ Speichern in Memory 300 &\\
 \multicolumn{2}{|c|}{Resultat = 0}\\
 \hline
 \end{tabular}
-\caption[Race Condition]{Ablauf eines unnsynchronisierten Zugriff}
+\caption[Race Condition]{Ablauf eines unsynchronisierten Zugriff}
 \label{fig:exampleRaceCondition2}
 \end{figure}
 Data Races wie unter \autoref{fig:exampleRaceCondition2} bleiben evtl. unentdeckt, da kein effektiver Fehlzustand im System entsteht, sondern Werte nicht richtig angepasst werden. Race Conditions zeichnen sich auch daher aus, dass sie stark vom Verarbeitungsablauf abhängen und daher nicht immer auftreten müssen. Wenn also die Threads in \autoref{fig:exampleRaceCondition2} in der richtigen Reihenfolge verarbeitet werden, wird evtl. kein Fehler entstehen.\\[0.4cm]
@@ -708,6 +708,8 @@ ca. 26ms & ca. 36992ms \\
 Faktor 1422x\\[0.4cm]
 In der Analyse zeigt sich, das der Parallel File Search viele Tasks startet. Diese müssen als Vector Clock erfasst werden und mit allen anderen überprüft werden. Dadurch steigt der Aufwand des Algorithmus mit der Anzahl Thread/Tasks an.
 \subsubsection{Schlussfolgerung Performance}
+Durch die Performance-Messungen zeigt sich, dass der Dynamic Parallel Checker Algorithmus stark abhängig ist von der Implementation der Anwendung welche überprüft werden soll. Testfall 2 zeigte auf, dass Tools mit stark verschachtelten For-Schleifen die Performance des Algorithmus stark beeinflussen, da sie viele Read und Writes produzieren. Testfall 3 zeigt auf, dass viele Threads und Tasks die gestartet werden, viele Vector Clocks ergeben. Dadurch muss der Algorithmus all diese Vector Clocks miteinander vergleichen. Der Arbeitsaufwand steigt dadurch steil an.\\
+Die Schlussfolgerung aus diesen Testfällen ist, dass der Vector Clock Algorithmus je grösser die zu verarbeitende Applikation ist, langsamer wird. Dadurch wäre der Algorithmus effizienter bei der Verarbeitung kleinerer Codes, wie z.B. Unit-Tests (sh. Vision \ref{vision_unittests}).
 \subsection{Technische Findings}
 \subsubsection{Task/Threads}\label{chapter_taskthread}
 Das .Net Framework von Microsoft kennt zwei asynchrone Operationstypen. Task oder Threads. Der Unterschied dieser zwei Typen liegt auf der Ausführungsumgebung. Threads werden direkt gestartet und vom Prozessor parallel verarbeitet. Task wurden zusammen mit der Task Parallel Library eingeführt. Dieser Typ wird nicht direkt ausgeführt, sondern in eine Queue geladen und dann von Worker Threads berechnet. Die Worker Threads werden vom .Net Framework automatisch gestartet. Die Anzahl wird durch die Laufzeitumgebung bestimmt, z.B. wie viele Kernen der Prozessor hat. Der Vorteil dieser Methode gegenüber der Threads ist es, das die Belastung auf den Arbeitsspeicher und Prozessor bei vielen parallelen Vorgängen optimiert und gesenkt wird. Der Nachteil ist, das es schneller zu Deadlocks kommen kann, wenn die Threads untereinander abhängig sind.\\
@@ -757,7 +759,7 @@ Die implementierte Funktionalität erlaubt es zur Zeit nur, Race Conditions zu e
 \subsubsection*{Dependencies instrumentieren}
 In dieser Version wird eine spezifische Applikation instrumentiert. Sollte die Anwendung noch  Abhängigkeiten zu weiteren, selbst entwickelten Libraries besitzen, werden Race Conditions, aus diesen Libraries, nicht erkannt. Dies, aufgrund der Tatsache, dass die Abhängigkeiten nicht instrumentiert werden. Diese zusätzliche Funktionalität, würde den Umfang des Überprüfungsbereichs erweitern. Dabei ist zu beachten, dass die Microsoft Core Library (mscorlib) nicht mit instrumentiert wird. Dies würde den Rahmen der Überwachung sprengen.
 \subsection{Vision}
-\subsubsection*{Unit Testing}
+\subsubsection*{Unit Testing}\label{vision_unittests}
 Um die Erkennungsrate des Algorithmus erhöhen zu können, müssen Tools mehrmals den Test durchlaufen. Daher ist eine Vision, den Algorithmus in ein Concurrent-UnitTesting Framework einzubauen. Dieses erlaubt dem Entwickler das erstellen von ConcurrentTests, welche nicht nur einen synchronen Test durchführen, sondern die Tests parallel zu einander ausführt um Race Conditions zu provozieren. Der Dynamic Parallel Checker Algortihmus überwacht die Unit Tests und meldet auftretende Race Conditions. Dadurch würden Tools vor dem Deployment und im Entwicklungszyklus jederzeit auf Race Conditions getestet, was die Entwickler sensibilisiert auf parallele Probleme und die Qualität der Software erhöht. Das Unit Testing Framework kann durch einen eigenen Scheduler in der Erkennung noch weiter verbessert werden. Durch ein gezieltes Verzahnen der Threads könnte provoziert werden, dass diese Race Conditions oder Deadlocks generieren
 \section*{Glossar}
 \addcontentsline{toc}{section}{Glossar}
