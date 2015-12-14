@@ -133,8 +133,8 @@ Mehr Informationen dazu unter: \ref{vector_algorithm} Vector Clock Algorithmus
 \end{flushleft}
 \subsubsection{Race Condition}\label{race_conditons}
 \begin{flushleft}
-TODO: In diesem Kapitel, Ressourcen noch genauer definieren. Wir erwähnen später überall Ressourcen haben aber nirgends definiert was wir unter Ressourcen genau verstehen. (Für Dominik ;))\\
-Bei Race Conditions handelt es sich um Speicherzugriffsfehler. Diese können durch richtige Synchronisation (z.B. mit Warten auf Beendigung des anderen Thread, oder durch Zustandsüberwachung) verhindert werden. In \autoref{fig:exampleRaceCondition} wird ein Code beschrieben, welcher diese Synchronisation komplett weglässt und daher Data Races entstehen.
+Bei Race Conditions handelt es sich um Speicherzugriffsfehler. Sie entstehen, wenn mehrere Threads auf gemeinsame Ressourcen (Variablen, Fields, Collections, usw.) ohne genügende Synchronisation zugreifen. Diese können zu unerwarteten Resultaten oder Effekten führen. Eine Untergruppe der Race Conditions bilden die Data Races. Sie entstehen durch eine ungenügende Synchronisation, beim Zugriff auf Speicherstellen.
+Race Conditions können durch richtige Synchronisation (z.B. mit Sperren eines kritischen Abschnittes, oder durch Zustandssynchronisation) verhindert werden. In \autoref{fig:exampleRaceCondition} wird ein Code beschrieben, welcher diese Synchronisation komplett weglässt und daher Data Races entstehen.
 \begin{figure}[H]
 \centering
 \begin{tabular}{|cc|}
@@ -148,25 +148,27 @@ Konto + 200 & Konto - 100 \\
 \caption[Beispiel Race Condition]{Ein unsynchronisierter Zugriff auf ein Konto}
 \label{fig:exampleRaceCondition}
 \end{figure}
-Wenn zwei Threads den Code unter \autoref{fig:exampleRaceCondition} neben läufig ausführen, ist nicht deterministisch, wie die Threads zueinander verzahnt oder gleichzeitig laufen. Die Situation in \autoref{fig:exampleRaceCondition2} kann dadurch entstehen. Der zweite Thread registriert die Änderungen des ersten Thread nicht und überschreibt daher den Speicherwert mit den falschen Daten.\\
+Wenn zwei Threads den Code unter \autoref{fig:exampleRaceCondition} nebenläufig ausführen, ist nicht deterministisch, wie die Threads zueinander verzahnt oder gleichzeitig laufen. Die Situation in \autoref{fig:exampleRaceCondition2} kann dadurch entstehen.Thread 1 und Thread 2 lesen den Wert in ihr eigenes Register. Die Addition erfolgt ebenfalls auf dem Register, wodurch jeder einen eigenen neuen Wert besitzt. Thread 1 schreibt seinen neuen Wert in das Memory, welcher vom neuen Wert von Thread 2 überschrieben wird. Durch diesen Vorgang entsteht das Resultat 0. Da die zwei Threads unterschiedliche Register besitzen, werden die Änderungen an den Variablen nicht an den anderen Thread übertragen.\\
+Bei korrekter Synchronisation wären beide Thread-Blöcke nacheinander durchgeführt worden, was zu einem korrekten Resultat von 200 geführt hätte.\\
 \begin{figure}[H]
 \centering
 \begin{tabular}{|cc|}
 \hline
 Thread 1 & Thread 2\\
-Lesen Konto = 100 & \\
-& Lesen Konto = 100\\
-Addieren 100 + 200 & Addieren 100 - 100\\
-Speichern 300 &\\
-& Speichern 0\\
-\multicolumn{2}{|c|}{Konto = 0}\\
+Lesen in Register = 100 & \\
+& Lesen in Register = 100\\
+Addieren im Register 100 + 200 & Addieren im Register 100 - 100\\
+Speichern in Memory 300 &\\
+& Speichern in Memory 0\\
+\multicolumn{2}{|c|}{Resultat = 0}\\
 \hline
 \end{tabular}
 \caption[Race Condition]{Ablauf eines unnsynchronisierten Zugriff}
 \label{fig:exampleRaceCondition2}
 \end{figure}
-Race Conditions wie unter \autoref{fig:exampleRaceCondition2} sind gefährlich, da kein effektiver Fehlzustand im System ensteht, sondern Werte nicht richtig angepasst werden. Race Conditions zeichnen sich auch daher aus, dass sie stark vom Verarbeitungsablauf abhängen und daher nicht immer auftreten müssen. Wenn also die Threads in \autoref{fig:exampleRaceCondition2} in der richtigen Reihenfolge verarbeitet werden, wird kein Fehler entstehen.\\
-
+Data Races wie unter \autoref{fig:exampleRaceCondition2} bleiben evtl. unentdeckt, da kein effektiver Fehlzustand im System entsteht, sondern Werte nicht richtig angepasst werden. Race Conditions zeichnen sich auch daher aus, dass sie stark vom Verarbeitungsablauf abhängen und daher nicht immer auftreten müssen. Wenn also die Threads in \autoref{fig:exampleRaceCondition2} in der richtigen Reihenfolge verarbeitet werden, wird evtl. kein Fehler entstehen.\\[0.4cm]
+\subsubsection*{Thread-Synchronisation}
+Data Races können durch richtige Synchronisation verhindert werden. Eine Möglichkeit zur Synchronisation sind Locks. Diese Sperren erlauben innerhalb des Locks nur einem Thread zu arbeiten. Dies kann Data Races verhindern, wenn das Locking korrekt durchgeführt wird, also kein Code im System nebenläufig ohne Lock auf die Variable zugreift. Es sollte jedoch beachtet werden, das Synchronisation relativ teuer ist und verhindert, das der Code Optimiert wird. Daher sollte nicht der gesamte Code synchronisiert werden.
 \end{flushleft}
 \subsubsection{Vector Clock}
 \begin{flushleft}
