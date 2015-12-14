@@ -136,13 +136,13 @@ Race Conditions können durch richtige Synchronisation (z.B. mit Sperren eines k
 \centering
 \begin{tabular}{|cc|}
 \hline
-\multicolumn{2}{|c|}{Konto = 100} \\ 
+\multicolumn{2}{|c|}{Variable = 100} \\ 
  &  \\ 
 Thread 1 & Thread 2 \\ 
-Konto + 200 & Konto - 100 \\ 
+Variable + 200 & Variable - 100 \\ 
 \hline
 \end{tabular}
-\caption[Beispiel Race Condition]{Ein unsynchronisierter Zugriff auf ein Konto}
+\caption[Beispiel Race Condition]{Ein unsynchronisierter Zugriff auf eine Variable}
 \label{fig:exampleRaceCondition}
 \end{figure}
 \newpage
@@ -161,7 +161,7 @@ Speichern in Memory 300 &\\
 \multicolumn{2}{|c|}{Resultat = 0}\\
 \hline
 \end{tabular}
-\caption[Race Condition]{Ablauf eines unnsynchronisierten Zugriff}
+\caption[Race Condition]{Ablauf eines unsynchronisierten Zugriff}
 \label{fig:exampleRaceCondition2}
 \end{figure}
 Data Races wie unter \autoref{fig:exampleRaceCondition2} bleiben evtl. unentdeckt, da kein effektiver Fehlzustand im System entsteht, sondern Werte nicht richtig angepasst werden. Race Conditions zeichnen sich auch daher aus, dass sie stark vom Verarbeitungsablauf abhängen und daher nicht immer auftreten müssen. Wenn also die Threads in \autoref{fig:exampleRaceCondition2} in der richtigen Reihenfolge verarbeitet werden, wird evtl. kein Fehler entstehen.\\[0.4cm]
