@@ -251,7 +251,7 @@ Eine Instruktion im MSIL Code setzt sich jeweils aus einem OpCode und einem Oper
 \begin{lstlisting}
 ldsflda    class TestProgram.NewObject TestProgram.Program::_obj1
 \end{lstlisting}
-In diesem IL Code ist "ldsflda" der OpCode und "class TestProgram.NewObject TestProgram.Program::\_obj1" der Operand. Der OpCode (Operation Code) identifiziert was die Operation durchführen soll. Hier "ldsflda" (Load Static Field Address). Dabei wird vom Operand definierten Static Field die Speicheradresse ausgelesen und auf den Stack gelegt. Der Operand ist daher jeweils die Ressource, welche für den OpCode verwendet wird. Der Typ des Operand ist durch den OpCode definiert.\\
+In diesem IL Code ist "ldsflda" der OpCode und "class TestProgram.NewObject TestProgram .Program::\_obj1" der Operand. Der OpCode (Operation Code) identifiziert was die Operation durchführen soll. Hier "ldsflda" (Load Static Field Address). Dabei wird vom Operand definierten Static Field die Speicheradresse ausgelesen und auf den Stack gelegt. Der Operand ist daher jeweils die Ressource, welche für den OpCode verwendet wird. Der Typ des Operand ist durch den OpCode definiert.\\
 Um erfolgreich den Source Code für den Dynamic Parallel Checker zu instrumentieren (sh. \autoref{example_injection}), muss der Aufbau des Stacks immer sichergestellt werden. Daher müssen Werte um Sie aus dem Stack herauszulesen, immer dupliziert werden, damit das Programm erfolgreich durchgeführt werden kann.\\
 \begin{figure}[H]
 \centering
